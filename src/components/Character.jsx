@@ -338,7 +338,8 @@ const Character = forwardRef(({
             `${playerColor}ee` : // Color semi-transparente para otros jugadores
             'rgba(255, 255, 255, 0.95)', // Blanco semi-transparente para el jugador principal
           color: isOtherPlayer ? 'white' : '#333',
-          borderColor: isOtherPlayer ? playerColor : 'rgba(0, 0, 0, 0.2)'
+          borderColor: isOtherPlayer ? playerColor : 'rgba(0, 0, 0, 0.2)',
+          top: `-${25 + (SPRITE_SCALE - 1) * 3}px` // Posicionarlo justo encima del nombre de usuario
         }}>
           <div className="chat-message">{chatMessage}</div>
           <div className="chat-tail"></div>
