@@ -14,14 +14,13 @@ const Character = forwardRef(({ position, visible = true, direction = 'left' }, 
     // Marcar que el personaje está en movimiento
     setIsMoving(true);
     
-    // Actualizar la posición visual con una demora mayor para la animación
+    // Actualizar la posición visual inmediatamente
     const timer = setTimeout(() => {
       setVisualPosition({ x: position.x, y: position.y });
       
       // Después de completar el movimiento, marcar que ya no está moviéndose
-      // Aumentamos el tiempo que el personaje se muestra en estado de movimiento
-      setTimeout(() => setIsMoving(false), 400);
-    }, 50); // Mayor demora antes de iniciar el movimiento
+      setTimeout(() => setIsMoving(false), 200);
+    }, 10); // Demora mínima
     
     return () => clearTimeout(timer);
   }, [position]);
@@ -54,8 +53,8 @@ const Character = forwardRef(({ position, visible = true, direction = 'left' }, 
     backgroundPosition: 'center',
     transform: `${bounce}`,
     zIndex: 10,
-    // Transición más lenta para el movimiento, pero sin afectar al cambio de sprite
-    transition: 'left 0.5s ease-in-out, top 0.5s ease-in-out, transform 0.5s',
+    // Solo transición para el efecto de rebote
+    transition: 'transform 0.2s',
     filter: isMoving ? 'brightness(1.3) drop-shadow(0 0 5px rgba(255, 255, 255, 0.7))' : 'brightness(1.1) drop-shadow(0 0 3px rgba(255, 255, 255, 0.5))', // Efecto de brillo mejorado
     imageRendering: 'pixelated' // Mantener el aspecto pixelado al hacer zoom
   };
