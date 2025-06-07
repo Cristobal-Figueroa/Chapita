@@ -93,9 +93,9 @@ const Game = () => {
   // Referencia para el viewport
   const viewportRef = useRef(null);
   
-  // Efecto para centrar la vista en el personaje cuando se mueve
-  useEffect(() => {
-    if (characterRef.current && viewportRef.current && gameStarted) {
+  // Función para centrar la cámara en el personaje con manejo de bordes
+  const centerCameraOnCharacter = () => {
+    if (viewportRef.current && gameStarted) {
       // Calcular la posición del personaje en píxeles
       const characterX = position.x * TILE_SIZE + TILE_SIZE / 2;
       const characterY = position.y * TILE_SIZE + TILE_SIZE / 2;
@@ -104,9 +104,17 @@ const Game = () => {
       const viewportWidth = viewportRef.current.clientWidth;
       const viewportHeight = viewportRef.current.clientHeight;
       
+      // Calcular las dimensiones totales del mapa
+      const mapWidth = map1[0].length * TILE_SIZE;
+      const mapHeight = map1.length * TILE_SIZE;
+      
       // Calcular la posición de desplazamiento para centrar al personaje
-      const scrollX = characterX - viewportWidth / 2;
-      const scrollY = characterY - viewportHeight / 2;
+      let scrollX = characterX - viewportWidth / 2;
+      let scrollY = characterY - viewportHeight / 2;
+      
+      // Ajustar los límites para que no se muestre espacio vacío en los bordes
+      scrollX = Math.max(0, Math.min(scrollX, mapWidth - viewportWidth));
+      scrollY = Math.max(0, Math.min(scrollY, mapHeight - viewportHeight));
       
       // Desplazar el viewport para centrar al personaje
       viewportRef.current.scrollTo({
@@ -115,7 +123,25 @@ const Game = () => {
         behavior: 'smooth'
       });
     }
-  }, [position, gameStarted]);
+  };
+  
+  // Centrar la cámara cuando el personaje se mueve
+  useEffect(() => {
+    centerCameraOnCharacter();
+  }, [position]);
+  
+  // Centrar la cámara cuando el juego comienza
+  useEffect(() => {
+    if (gameStarted) {
+      // Centrar inmediatamente
+      centerCameraOnCharacter();
+      
+      // Y luego volver a centrar después de un breve retraso para asegurar que todo esté renderizado
+      setTimeout(centerCameraOnCharacter, 100);
+      setTimeout(centerCameraOnCharacter, 300);
+      setTimeout(centerCameraOnCharacter, 500);
+    }
+  }, [gameStarted]);
   
   // Calcular el estilo para el contenedor del mapa
   const mapContainerStyle = {
