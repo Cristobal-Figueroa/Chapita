@@ -1,0 +1,87 @@
+/* Estilos específicos para los personajes */
+
+.character {
+  position: absolute;
+  transition: transform 0.15s ease-out;
+  will-change: transform, left, top;
+  z-index: 10;
+  transform-style: preserve-3d;
+  backface-visibility: hidden;
+  image-rendering: pixelated; /* Mejor renderizado para sprites pixelados */
+}
+
+/* Estilos específicos para personajes de otros jugadores */
+.character.other-player {
+  /* Aplicar suavizado de movimiento */
+  transition: left 0.3s cubic-bezier(0.25, 0.1, 0.25, 1), 
+              top 0.3s cubic-bezier(0.25, 0.1, 0.25, 1),
+              transform 0.3s ease-out;
+  /* Reducir parpadeos */
+  backface-visibility: hidden;
+  transform-style: preserve-3d;
+  opacity: 0.95;
+  pointer-events: none; /* Evita que interfieran con clics */
+}
+
+.character-sprite {
+  position: relative;
+  background-size: contain;
+  background-repeat: no-repeat;
+  background-position: center;
+  transition: transform 0.2s ease-out;
+  filter: drop-shadow(2px 2px 2px rgba(0, 0, 0, 0.5));
+  image-rendering: pixelated; /* Para sprites pixelados */
+  backface-visibility: hidden; /* Reduce parpadeos */
+}
+
+/* Animación suave para nombres de usuario */
+.character-name {
+  transition: all 0.3s ease;
+  transform-origin: center bottom;
+  will-change: transform, opacity;
+  backface-visibility: hidden;
+  transform-style: preserve-3d;
+  /* Evitar selección de texto */
+  user-select: none;
+}
+
+/* Animación para movimiento */
+@keyframes bounce {
+  0%, 100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-2px);
+  }
+}
+
+/* Aplicar animación de rebote durante el movimiento */
+.character.is-moving {
+  animation: bounce 0.5s infinite ease-in-out;
+}
+
+/* Animación de rebote más suave para otros jugadores */
+.character.other-player.is-moving {
+  animation: bounce 0.6s infinite ease-in-out;
+}
+
+/* Animación de aparición para nuevos jugadores */
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(-5px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.character.other-player:not(.was-visible) {
+  animation: fadeIn 0.4s ease-out forwards;
+}
+.character.is-moving .character-sprite {
+  animation: bounce 0.4s infinite;
+}
+
+/* Optimizaciones para rendimiento */
+.character, .character-sprite, .character-name {
+  /* Mejora el rendimiento de las animaciones */
+  will-change: transform, opacity;
+  /* Forzar aceleración por hardware */
+  transform: translateZ(0);
+}

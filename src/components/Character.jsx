@@ -25,12 +25,14 @@ const Character = forwardRef(({
   direction = 'left', 
   isKeyPressed = false, 
   isOtherPlayer = false, 
-  username = 'Jugador'
+  username = 'Jugador',
+  isMoving = false
 }, ref) => {
   // Estados para la posición visual del personaje (para animaciones suaves)
   const [visualPosition, setVisualPosition] = useState({ x: position.x, y: position.y });
-  const [isMoving, setIsMoving] = useState(false);
+  const [isMovingState, setIsMovingState] = useState(false);
   const [lastDirection, setLastDirection] = useState(direction); // Guardar la última dirección
+  const [wasVisible, setWasVisible] = useState(false); // Para controlar la animación de aparición
   const [moveCount, setMoveCount] = useState(0); // Contador de movimientos en la misma dirección
   const [idleTimer, setIdleTimer] = useState(null); // Temporizador para el estado de reposo
   const [isIdle, setIsIdle] = useState(false); // Estado de reposo (cuando no se presionan teclas por un tiempo)
@@ -72,7 +74,19 @@ const Character = forwardRef(({
     };
   }, [isKeyPressed, idleTimer]);
 
-  // Actualizar la posición visual cuando cambia la posición real
+  // Efecto para marcar el personaje como visible después de la primera renderización
+  useEffect(() => {
+    if (visible && !wasVisible) {
+      // Usar un pequeño retraso para asegurar que la clase CSS se aplique después del primer render
+      const timer = setTimeout(() => {
+        setWasVisible(true);
+      }, 500); // Tiempo suficiente para que se complete la animación de aparición
+      
+      return () => clearTimeout(timer);
+    }
+  }, [visible, wasVisible]);
+  
+  // Efecto para actualizar la posición visual cuando cambia la posición real
   // Este efecto NO afecta al estado de reposo
   useEffect(() => {
     // Detectar si la posición ha cambiado realmente
@@ -80,20 +94,39 @@ const Character = forwardRef(({
     
     if (positionChanged) {
       // Marcar que el personaje está en movimiento SOLO cuando cambia de cuadradito
-      setIsMoving(true);
+      setIsMovingState(true);
       
-      // Actualizar la posición visual gradualmente
-      setVisualPosition({ x: position.x, y: position.y });
-      
-      // Después de completar el movimiento, marcar que ya no está moviéndose
-      const animationDuration = 150; // Duración de la animación en ms
-      const timer = setTimeout(() => {
-        setIsMoving(false);
-      }, animationDuration);
-      
-      return () => clearTimeout(timer);
+      // Para jugadores online, usar transición más suave
+      if (isOtherPlayer) {
+        // Usar un timeout para crear una transición suave
+        const transitionTimer = setTimeout(() => {
+          setVisualPosition({ x: position.x, y: position.y });
+        }, 10); // Pequeño retraso para permitir que la transición CSS funcione
+        
+        // Después de completar el movimiento, marcar que ya no está moviéndose
+        const animationDuration = 300; // Duración más larga para otros jugadores
+        const timer = setTimeout(() => {
+          setIsMovingState(false);
+        }, animationDuration);
+        
+        return () => {
+          clearTimeout(transitionTimer);
+          clearTimeout(timer);
+        };
+      } else {
+        // Para el jugador local, actualizar inmediatamente
+        setVisualPosition({ x: position.x, y: position.y });
+        
+        // Después de completar el movimiento, marcar que ya no está moviéndose
+        const animationDuration = 150; // Duración de la animación en ms
+        const timer = setTimeout(() => {
+          setIsMovingState(false);
+        }, animationDuration);
+        
+        return () => clearTimeout(timer);
+      }
     }
-  }, [position, visualPosition]);
+  }, [position, visualPosition, isOtherPlayer]);
   
   // Efecto separado para manejar cambios de dirección
   useEffect(() => {
@@ -112,14 +145,14 @@ const Character = forwardRef(({
       if (isOppositeDirection) {
         console.log('Dirección opuesta detectada, mostrando sprite de reposo en nueva dirección');
         // No activar movimiento, solo cambiar dirección
-        setIsMoving(false);
+        setIsMovingState(false);
       }
       
       setMoveCount(1);
       setLastDirection(direction);
     } else {
       // Si sigue en la misma dirección y está moviéndose, incrementar el contador
-      if (isMoving) {
+      if (effectiveIsMoving) {
         setMoveCount(prevCount => prevCount + 1);
       }
     }
@@ -127,8 +160,11 @@ const Character = forwardRef(({
   
   if (!visible) return null;
   
+  // Determinar si el personaje está en movimiento basado en props o estado interno
+  const effectiveIsMoving = isOtherPlayer ? isMoving || isMovingState : isMovingState;
+  
   // Calcular un ligero rebote para la animación de movimiento
-  const bounce = isMoving ? 'translateY(-5px)' : 'translateY(0)'; 
+  const bounce = effectiveIsMoving ? 'translateY(-5px)' : 'translateY(0)'; 
   
   // Seleccionar el sprite adecuado según el estado (movimiento, quieto, reposo) y dirección
   let currentSprite;
@@ -149,7 +185,7 @@ const Character = forwardRef(({
     }
   }
   // Si no está en reposo, verificamos si está en movimiento
-  else if (isMoving) {
+  else if (effectiveIsMoving) {
     // Está en movimiento activo (cambiando de posición)
     console.log('ESTADO: MOVIMIENTO - Dirección: ' + direction.toUpperCase());
     if (direction === 'right') {
@@ -214,17 +250,21 @@ const Character = forwardRef(({
   
   const playerColor = getPlayerColor();
   
+  // La variable effectiveIsMoving ya está definida arriba
+  
   return (
-    <div className="character-container" style={{
-      position: 'absolute',
-      left: `${visualPosition.x * TILE_SIZE}px`,
-      top: `${visualPosition.y * TILE_SIZE}px`,
-      width: `${TILE_SIZE}px`,
-      display: visible ? 'flex' : 'none',
-      flexDirection: 'column',
-      alignItems: 'center',
-      zIndex: 10
-    }}>
+    <div 
+      className={`character ${isOtherPlayer ? 'other-player' : ''} ${effectiveIsMoving ? 'is-moving' : ''} ${wasVisible ? 'was-visible' : ''}`}
+      style={{
+        position: 'absolute',
+        left: `${visualPosition.x * TILE_SIZE}px`,
+        top: `${visualPosition.y * TILE_SIZE}px`,
+        width: `${TILE_SIZE}px`,
+        display: visible ? 'flex' : 'none',
+        flexDirection: 'column',
+        alignItems: 'center',
+        zIndex: 10
+      }}>
       {/* Nombre de usuario */}
       {username && (
         <div className="character-name" style={{
@@ -260,7 +300,7 @@ const Character = forwardRef(({
       {/* Sprite del personaje */}
       <div
         ref={ref}
-        className="character-sprite"
+        className={`character-sprite ${effectiveIsMoving ? 'is-moving' : ''}`}
         style={{
           width: `${TILE_SIZE * SPRITE_SCALE}px`,
           height: `${TILE_SIZE * SPRITE_SCALE}px`,
@@ -268,11 +308,15 @@ const Character = forwardRef(({
           backgroundSize: 'contain',
           backgroundRepeat: 'no-repeat',
           backgroundPosition: 'center',
-          transition: isMoving ? 'none' : 'left 0.2s ease-out, top 0.2s ease-out',
+          transition: isOtherPlayer 
+            ? 'transform 0.1s ease-out, left 0.3s ease-out, top 0.3s ease-out' 
+            : effectiveIsMoving ? 'none' : 'transform 0.2s ease-out',
           transform: `translate(${-TILE_SIZE * (SPRITE_SCALE - 1) / 2}px, ${-TILE_SIZE * (SPRITE_SCALE - 1) / 2}px)`,
           filter: isOtherPlayer 
             ? `drop-shadow(0 0 5px ${playerColor}) drop-shadow(2px 2px 2px rgba(0, 0, 0, 0.5))` 
-            : 'drop-shadow(2px 2px 2px rgba(0, 0, 0, 0.5))' // Sombra suave
+            : 'drop-shadow(2px 2px 2px rgba(0, 0, 0, 0.5))', // Sombra suave
+          backfaceVisibility: 'hidden', // Reducir parpadeos
+          willChange: 'transform' // Optimizar rendimiento
         }}
       />
     </div>

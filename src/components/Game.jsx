@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ref, set, onValue, off, update } from 'firebase/database';
+import { ref, onValue, off, set, update, serverTimestamp } from 'firebase/database';
 import { database } from '../firebase/config';
 import { useAuth } from '../contexts/AuthContext';
 import GameMap from './GameMap';
@@ -92,7 +92,8 @@ const Game = () => {
           username: currentUser.displayName || 'Jugador',
           position,
           lastDirection,
-          lastUpdated: new Date().toISOString(),
+          lastUpdated: serverTimestamp(), // Usar timestamp del servidor para mayor precisión
+          isMoving: false,
           ...userData
         });
       } catch (error) {
@@ -102,17 +103,65 @@ const Game = () => {
     
     setPlayerOnline();
     
-    // Escuchar cambios en los jugadores online
+    // Escuchar cambios en los jugadores online con alta prioridad
     const unsubscribe = onValue(onlinePlayersRef, (snapshot) => {
       const players = {};
       snapshot.forEach((childSnapshot) => {
         // No incluir al jugador actual
         if (childSnapshot.key !== currentUser.uid) {
-          players[childSnapshot.key] = childSnapshot.val();
+          const playerData = childSnapshot.val();
+          
+          // Asegurarse de que los datos sean válidos
+          if (playerData && playerData.position) {
+            // Calcular tiempo desde la última actualización para detectar jugadores inactivos
+            const lastUpdated = playerData.lastUpdated || 0;
+            const now = Date.now();
+            const timeSinceUpdate = typeof lastUpdated === 'number' ? now - lastUpdated : 60000; // Default a 1 minuto si no hay timestamp
+            
+            // Verificar si el jugador ha estado inactivo por más de 10 segundos
+            const isInactive = timeSinceUpdate > 10000;
+            
+            players[childSnapshot.key] = {
+              ...playerData,
+              // Asegurar que la posición siempre tenga valores numéricos válidos
+              position: {
+                x: Number(playerData.position.x) || 0,
+                y: Number(playerData.position.y) || 0
+              },
+              // Añadir propiedad para detectar inactividad
+              isInactive
+            };
+          }
         }
       });
-      setOnlinePlayers(players);
-    });
+      
+      // Actualizar el estado con los nuevos datos de jugadores
+      setOnlinePlayers(prevPlayers => {
+        const updatedPlayers = {};
+        
+        // Procesar cada jugador del nuevo snapshot
+        Object.keys(players).forEach(playerId => {
+          const newPlayerData = players[playerId];
+          const prevPlayerData = prevPlayers[playerId];
+          
+          // Si el jugador ya existía, preservar algunos datos para transiciones suaves
+          if (prevPlayerData) {
+            updatedPlayers[playerId] = {
+              ...newPlayerData,
+              // Mantener el estado isMoving actualizado basado en si la posición cambió
+              isMoving: newPlayerData.isMoving || 
+                (prevPlayerData.position.x !== newPlayerData.position.x || 
+                 prevPlayerData.position.y !== newPlayerData.position.y)
+            };
+          } else {
+            // Nuevo jugador, usar datos tal cual
+            updatedPlayers[playerId] = newPlayerData;
+          }
+        });
+        
+        return updatedPlayers;
+      });
+    }, { onlyOnce: false }); // Asegurarse de recibir todas las actualizaciones
     
     // Limpiar al desmontar
     return () => {
@@ -121,29 +170,62 @@ const Game = () => {
       // Dejar de escuchar cambios
       off(onlinePlayersRef);
     };
-  }, [currentUser, position, lastDirection]);
+  }, [currentUser]); // Solo depende del usuario, no de la posición
   
   // Función para actualizar la posición del jugador en la base de datos
   const updatePlayerPosition = () => {
     if (!currentUser) return;
     
     const playerRef = ref(database, `online_players/${currentUser.uid}`);
-    update(playerRef, {
+    
+    // Crear un objeto con las actualizaciones
+    const updates = {
       position,
       lastDirection,
-      lastUpdated: new Date().toISOString()
+      isMoving: isKeyPressed, // Indicar si el jugador está en movimiento
+      lastUpdated: serverTimestamp() // Usar timestamp del servidor para sincronización precisa
+    };
+    
+    // Actualizar en tiempo real con alta prioridad
+    update(playerRef, updates).catch(error => {
+      console.error('Error al actualizar posición:', error);
+      // Intentar reconectar si hay un error de conexión
+      setTimeout(() => updatePlayerPosition(), 1000);
     });
     
-    // También actualizar en el perfil del usuario
-    updateUserData(currentUser.uid, { position, lastDirection });
+    // Actualizar en el perfil del usuario solo cuando el jugador se detiene
+    // para reducir escrituras innecesarias
+    if (!isKeyPressed) {
+      updateUserData(currentUser.uid, { position, lastDirection });
+    }
   };
   
   // Actualizar la posición en la base de datos cuando cambia
   useEffect(() => {
     if (gameStarted && currentUser) {
-      updatePlayerPosition();
+      // Usar un pequeño debounce para evitar demasiadas actualizaciones
+      const updateTimer = setTimeout(() => {
+        updatePlayerPosition();
+      }, 50); // 50ms de debounce
+      
+      return () => clearTimeout(updateTimer);
     }
-  }, [position, lastDirection, gameStarted]);
+  }, [position, lastDirection, gameStarted, isKeyPressed]);
+  
+  // Efecto para actualizar periódicamente el estado online del jugador
+  // incluso cuando no se está moviendo, para mantener la conexión activa
+  useEffect(() => {
+    if (gameStarted && currentUser) {
+      const keepAliveInterval = setInterval(() => {
+        const playerRef = ref(database, `online_players/${currentUser.uid}`);
+        update(playerRef, {
+          lastUpdated: serverTimestamp()
+        });
+      }, 5000); // Actualizar cada 5 segundos
+      
+      return () => clearInterval(keepAliveInterval);
+    }
+  }, [gameStarted, currentUser]);
   
   // Función para cerrar sesión
   const handleLogout = async () => {
@@ -507,15 +589,16 @@ const Game = () => {
         >
           <GameMap map={map1} />
 
-          {/* Renderizar personajes de otros jugadores */}
-          {Object.entries(onlinePlayers).map(([id, player]) => (
+          {/* Renderizar otros jugadores */}
+          {Object.entries(onlinePlayers).map(([playerId, playerData]) => (
             <Character
-              key={id}
-              position={player.position || { x: 0, y: 0 }}
-              direction={player.lastDirection || 'down'}
-              isKeyPressed={false}
+              key={playerId}
+              position={playerData.position}
+              direction={playerData.lastDirection || 'down'}
               isOtherPlayer={true}
-              username={player.username}
+              username={playerData.username || 'Jugador'}
+              isMoving={playerData.isMoving}
+              visible={!playerData.isInactive} // Ocultar jugadores inactivos
             />
           ))}
 
