@@ -1,6 +1,7 @@
 import React from 'react';
 import { map1, TILE_SIZE } from '../assets/maps/map1';
 import grassTexture from '../assets/sprites/gras.jpg';
+import treeTexture from '../assets/sprites/tree.png';
 
 const GameMap = () => {
   // Función para determinar el color base de cada tipo de celda
@@ -54,15 +55,23 @@ const GameMap = () => {
           // Sin background-image para dejar ver la textura de fondo
         };
       
-      case 1: // Árbol individual
+      case 1: // Árbol individual - ahora usando tree.png
         return {
           ...baseStyle,
           backgroundColor: 'transparent',
-          backgroundImage: 'radial-gradient(ellipse at 50% 30%, #2d7a4d 50%, #1e5631 80%)',
-          boxShadow: '0 10px 20px rgba(0, 0, 0, 0.4)',
-          borderRadius: '50% 50% 10% 10% / 60% 60% 40% 40%',
-          transform: `scale(${0.9 + Math.sin(rowIndex * colIndex) * 0.1}) rotate(${(rowIndex * colIndex) % 5}deg)`,
-          filter: 'drop-shadow(0 5px 3px rgba(0,0,0,0.3))',
+          backgroundImage: `url(${treeTexture})`,
+          backgroundSize: 'contain',
+          backgroundPosition: 'center bottom',
+          backgroundRepeat: 'no-repeat',
+          // Hacer que el árbol sea mucho más alto que la celda
+          height: `${TILE_SIZE * 2.5}px`,
+          width: `${TILE_SIZE * 2}px`,
+          // Ajustar la posición para que la base del árbol esté en la celda
+          top: `${rowIndex * TILE_SIZE - (TILE_SIZE * 1.5)}px`,
+          left: `${colIndex * TILE_SIZE - (TILE_SIZE * 0.5)}px`,
+          transform: `scale(${1.2 + Math.sin(rowIndex * colIndex) * 0.2})`,
+          filter: 'drop-shadow(3px 6px 8px rgba(0,0,0,0.5))',
+          zIndex: 20, // Asegurar que los árboles estén por encima de otros elementos
         };
       
       case 2: // Agua
@@ -122,17 +131,14 @@ const GameMap = () => {
           transform: `rotate(${(rowIndex * colIndex) % 360}deg)`,
         };
       
-      case 7: // Árboles densos (bosque)
+      case 7: // Árboles densos (bosque) - ahora usando tree.png
+        // Para bosques, vamos a crear un grupo de árboles en lugar de usar gradientes
+        // Esta es una celda especial que se manejará de forma diferente en el renderizado
         return {
           ...baseStyle,
-          backgroundColor: baseColor,
-          backgroundImage: `
-            radial-gradient(circle at ${20 + (rowIndex * colIndex) % 60}% ${30 + (rowIndex * colIndex) % 40}%, 
-            #2d7a4d 20%, transparent 30%),
-            radial-gradient(circle at ${50 + (colIndex * rowIndex) % 30}% ${60 + (colIndex * rowIndex) % 30}%, 
-            #2d7a4d 25%, transparent 35%)
-          `,
-          boxShadow: 'inset 0 0 30px rgba(0,0,0,0.5)',
+          backgroundColor: 'transparent',
+          // No definimos backgroundImage aquí porque crearemos elementos separados para los árboles
+          zIndex: 5, // Capa base del bosque
         };
       
       case 8: // Arbustos
@@ -159,6 +165,58 @@ const GameMap = () => {
   `;
   document.head.appendChild(styleSheet);
 
+  // Función para crear grupos de árboles para las celdas de bosque
+  const createForestTrees = () => {
+    const forestTrees = [];
+    
+    map1.forEach((row, rowIndex) => {
+      row.forEach((tile, colIndex) => {
+        // Solo procesar celdas de bosque (tipo 7)
+        if (tile === 7) {
+          // Crear varios árboles por cada celda de bosque
+          const numTrees = 3 + Math.floor(pseudoRandom(rowIndex, colIndex) * 3); // 3-5 árboles
+          
+          for (let i = 0; i < numTrees; i++) {
+            // Posición aleatoria dentro de la celda
+            const offsetX = pseudoRandom(i, rowIndex) * TILE_SIZE * 0.8;
+            const offsetY = pseudoRandom(colIndex, i) * TILE_SIZE * 0.8;
+            const scale = 1.0 + pseudoRandom(i + rowIndex, i + colIndex) * 0.6; // 1.0-1.6 (mucho más grande)
+            const zIndexOffset = Math.floor(pseudoRandom(i, colIndex) * 5); // 0-4
+            
+            forestTrees.push(
+              <div
+                key={`forest-tree-${rowIndex}-${colIndex}-${i}`}
+                style={{
+                  position: 'absolute',
+                  left: `${colIndex * TILE_SIZE + offsetX - (TILE_SIZE * 0.5)}px`,
+                  top: `${rowIndex * TILE_SIZE + offsetY - (TILE_SIZE * 1.2)}px`,
+                  width: `${TILE_SIZE * 2}px`,
+                  height: `${TILE_SIZE * 2.5}px`,
+                  backgroundImage: `url(${treeTexture})`,
+                  backgroundSize: 'contain',
+                  backgroundPosition: 'center bottom',
+                  backgroundRepeat: 'no-repeat',
+                  transform: `scale(${scale})`,
+                  filter: 'drop-shadow(3px 6px 8px rgba(0,0,0,0.5))',
+                  zIndex: 20 + zIndexOffset, // Asegurar que los árboles estén por encima de otros elementos
+                }}
+              />
+            );
+          }
+        }
+      });
+    });
+    
+    return forestTrees;
+  };
+  
+  // Función para generar valores aleatorios consistentes
+  const pseudoRandom = (x, y) => {
+    const seed = 42; // Usar un valor fijo para consistencia
+    const val = Math.sin(seed + x * 12.9898 + y * 78.233) * 43758.5453;
+    return val - Math.floor(val);
+  };
+
   return (
     <div
       style={{
@@ -175,7 +233,8 @@ const GameMap = () => {
       {map1.map((row, rowIndex) =>
         row.map((tile, colIndex) => {
           // No renderizar celdas de hierba (0) ya que tenemos un fondo base
-          if (tile === 0) return null;
+          // Tampoco renderizar bosques (7) ya que los manejamos por separado
+          if (tile === 0 || tile === 7) return null;
           
           return (
             <div
@@ -185,6 +244,9 @@ const GameMap = () => {
           );
         })
       )}
+      
+      {/* Agregar los árboles de bosque como elementos separados */}
+      {createForestTrees()}
     </div>
   );
 };

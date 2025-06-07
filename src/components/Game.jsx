@@ -304,9 +304,51 @@ const Game = () => {
       return false;
     }
     
-    // Verificar si es un obstáculo (1: árbol, 2: agua, 3: casa, 7: árboles densos)
+    // Verificar si la celda actual es un obstáculo
     const tileType = map1[y][x];
-    return ![1, 2, 3, 7].includes(tileType);
+    if ([2, 3].includes(tileType)) { // Agua y casas son obstáculos completos
+      return false;
+    }
+    
+    // Para árboles (tipo 1) y bosques (tipo 7), verificar también celdas adyacentes
+    // debido a que visualmente son más grandes que una celda
+    if (tileType === 1 || tileType === 7) {
+      // La celda actual es un árbol, no es válida
+      return false;
+    }
+    
+    // Verificar árboles cercanos que podrían estar superpuestos visualmente
+    // Comprobar celdas adyacentes para árboles grandes
+    const adjacentCells = [
+      { dx: -1, dy: -1 }, // Diagonal superior izquierda
+      { dx: 0, dy: -1 },  // Arriba
+      { dx: 1, dy: -1 },  // Diagonal superior derecha
+      { dx: -1, dy: 0 },  // Izquierda
+      { dx: 1, dy: 0 },   // Derecha
+    ];
+    
+    for (const cell of adjacentCells) {
+      const adjX = x + cell.dx;
+      const adjY = y + cell.dy;
+      
+      // Verificar que la celda adyacente esté dentro del mapa
+      if (adjX >= 0 && adjY >= 0 && adjY < map1.length && adjX < map1[0].length) {
+        const adjTileType = map1[adjY][adjX];
+        
+        // Si hay un árbol en la celda superior, no permitir el movimiento
+        // porque visualmente el árbol ocupa más espacio hacia abajo
+        if (adjTileType === 1 && cell.dy === -1) {
+          return false;
+        }
+        
+        // Si hay un bosque denso cerca, también considerar colisión
+        if (adjTileType === 7) {
+          return false;
+        }
+      }
+    }
+    
+    return true;
   };
 
   // Manejar cuando se presiona una tecla
