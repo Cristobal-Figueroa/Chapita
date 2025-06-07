@@ -8,7 +8,7 @@ const Game = () => {
   const [gameStarted, setGameStarted] = useState(false);
   
   // Posición inicial del personaje (coordenadas en el mapa)
-  const [position, setPosition] = useState({ x: 5, y: 5 });
+  const [position, setPosition] = useState({ x: 12, y: 12 });
   
   // Estado para la dirección del personaje (izquierda o derecha)
   const [direction, setDirection] = useState('left');
