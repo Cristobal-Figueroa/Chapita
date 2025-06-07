@@ -116,15 +116,41 @@ const Game = () => {
         }, MOVEMENT_SPEED);
       }
     } else {
-      // Si es una nueva dirección, solo actualizar la dirección sin mover
-      setLastDirection(currentKey);
-      // No actualizar la posición, solo girar
+      // Si es una nueva dirección, verificamos si es opuesta a la actual
+      const isOppositeDirection = 
+        (currentKey === 'right' && lastDirection === 'left') ||
+        (currentKey === 'left' && lastDirection === 'right') ||
+        (currentKey === 'up' && lastDirection === 'down') ||
+        (currentKey === 'down' && lastDirection === 'up');
       
-      // Activar un cooldown más corto para el giro
-      setCanMove(false);
-      setTimeout(() => {
-        setCanMove(true);
-      }, MOVEMENT_SPEED / 2); // El giro es más rápido que el movimiento
+      // Si es dirección opuesta, solo girar sin mover en la primera pulsación
+      if (isOppositeDirection) {
+        console.log('Dirección opuesta detectada, solo girando');
+        setLastDirection(currentKey);
+        // No actualizar la posición, solo girar
+        
+        // Activar un cooldown más corto para el giro
+        setCanMove(false);
+        setTimeout(() => {
+          setCanMove(true);
+        }, MOVEMENT_SPEED / 2); // El giro es más rápido que el movimiento
+      } else {
+        // Si no es dirección opuesta, actualizar dirección y mover
+        setLastDirection(currentKey);
+        
+        // Mover al personaje si la posición es válida
+        if (isValidPosition(newX, newY)) {
+          setPosition({ x: newX, y: newY });
+          
+          // Activar el cooldown
+          setCanMove(false);
+          
+          // Reactivar el movimiento después del tiempo definido
+          setTimeout(() => {
+            setCanMove(true);
+          }, MOVEMENT_SPEED);
+        }
+      }
     }
   };
 

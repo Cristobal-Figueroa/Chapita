@@ -79,7 +79,22 @@ const Character = forwardRef(({ position, visible = true, direction = 'left', is
   useEffect(() => {
     // Actualizar la dirección y el contador de movimientos
     if (direction !== lastDirection) {
-      // Si cambió de dirección, reiniciar el contador
+      // Si cambió de dirección, actualizar la dirección pero mantener el estado
+      console.log('Cambio de dirección a: ' + direction + ', manteniendo estado actual');
+      
+      // Detectar si es un cambio a dirección opuesta
+      const isOppositeDirection = 
+        (direction === 'right' && lastDirection === 'left') ||
+        (direction === 'left' && lastDirection === 'right') ||
+        (direction === 'up' && lastDirection === 'down') ||
+        (direction === 'down' && lastDirection === 'up');
+      
+      if (isOppositeDirection) {
+        console.log('Dirección opuesta detectada, mostrando sprite de reposo en nueva dirección');
+        // No activar movimiento, solo cambiar dirección
+        setIsMoving(false);
+      }
+      
       setMoveCount(1);
       setLastDirection(direction);
     } else {
@@ -101,9 +116,9 @@ const Character = forwardRef(({ position, visible = true, direction = 'left', is
   // Primero verificamos si está en estado de reposo (1.6 segundos sin teclas)
   if (isIdle) {
     // Estado de reposo: mostrar sprite estático según la última dirección
-    console.log('En estado de reposo (1.6 segundos sin teclas), sprite: ' + 
-               (lastDirection === 'right' ? 'derecha' : 
-                lastDirection === 'left' ? 'izquierda' : 'abajo'));
+    console.log('ESTADO: REPOSO (1.6 segundos sin teclas) - Orientación: ' + 
+               (lastDirection === 'right' ? 'DERECHA' : 
+                lastDirection === 'left' ? 'IZQUIERDA' : 'ABAJO'));
                 
     if (lastDirection === 'right') {
       currentSprite = dazRightSprite; // Reposo mirando a la derecha
@@ -116,7 +131,7 @@ const Character = forwardRef(({ position, visible = true, direction = 'left', is
   // Si no está en reposo, verificamos si está en movimiento
   else if (isMoving) {
     // Está en movimiento activo (cambiando de posición)
-    console.log('Mostrando sprite de movimiento');
+    console.log('ESTADO: MOVIMIENTO - Dirección: ' + direction.toUpperCase());
     if (direction === 'right') {
       // Para movimiento a la derecha, usar sprite según el contador de movimientos
       if (moveCount <= 1) {
@@ -142,9 +157,9 @@ const Character = forwardRef(({ position, visible = true, direction = 'left', is
   // Si no está en reposo ni en movimiento, está quieto
   else {
     // Está quieto (no en reposo y no cambiando de posición)
-    console.log('Quieto pero no en reposo, sprite: ' + 
-               (lastDirection === 'right' ? 'derecha' : 
-                lastDirection === 'left' ? 'izquierda' : 'abajo'));
+    console.log('ESTADO: QUIETO - Orientación: ' + 
+               (lastDirection === 'right' ? 'DERECHA' : 
+                lastDirection === 'left' ? 'IZQUIERDA' : 'ABAJO'));
                 
     if (lastDirection === 'right') {
       currentSprite = dazRightSprite; // Quieto mirando a la derecha
