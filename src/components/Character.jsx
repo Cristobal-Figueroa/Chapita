@@ -353,20 +353,13 @@ const Character = forwardRef(({
           width: '60px', // Aún más pequeño
           textAlign: 'center',
           transform: 'translateX(-50%)', // Mantener centrado relativo a su posición
-          backgroundColor: isOtherPlayer ? 
-            `${playerColor}dd` : // Color semi-transparente para otros jugadores
-            'rgba(76, 175, 80, 0.85)', // Verde semi-transparente para el jugador principal
-          color: 'white',
-          padding: '1px 3px', // Padding más pequeño
-          borderRadius: '6px', // Bordes menos redondeados
+          color: isOtherPlayer ? playerColor : '#4CAF50', // Color según el jugador
           fontSize: '9px', // Fuente aún más pequeña
           fontWeight: 'bold',
           letterSpacing: '0.2px',
           whiteSpace: 'nowrap',
           overflow: 'hidden',
           textOverflow: 'ellipsis',
-          boxShadow: '0 1px 2px rgba(0, 0, 0, 0.3), 0 0 4px rgba(255, 255, 255, 0.15) inset',
-          border: '1px solid rgba(255, 255, 255, 0.25)',
           textShadow: '0px 1px 1px rgba(0, 0, 0, 0.7)',
           zIndex: 20,
           backdropFilter: 'blur(1px)',
