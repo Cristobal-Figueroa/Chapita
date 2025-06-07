@@ -6,6 +6,7 @@ import { useAuth } from '../contexts/AuthContext';
 import GameMap from './GameMap';
 import Character from './Character';
 import OnlinePlayers from './OnlinePlayers';
+import '../styles/game.css';
 import { map1, TILE_SIZE } from '../assets/maps/map1';
 
 const Game = () => {
@@ -37,11 +38,21 @@ const Game = () => {
   // Estado para la posición de la cámara
   const [cameraPosition, setCameraPosition] = useState({ x: 0, y: 0 });
   
+  // Estados para el chat
+  const [isChatting, setIsChatting] = useState(false); // Si está en modo chat
+  const [chatMessage, setChatMessage] = useState(''); // Mensaje actual
+  const [chatInputValue, setChatInputValue] = useState(''); // Valor del input de chat
+  const [chatMessages, setChatMessages] = useState({}); // Mensajes de todos los jugadores
+  
   // Factor de zoom para acercar la cámara
   const ZOOM_FACTOR = 1.5; // Aumentar este valor para acercar más
   
   // Constante para la velocidad de movimiento (en ms)
   const MOVEMENT_SPEED = 150; // 150ms entre movimientos (más rápido)
+  
+  // Referencia a los temporizadores de movimiento y chat para limpiarlos
+  const movementTimers = {};
+  const chatTimers = {};
   
   // Referencia para el contenedor del juego para mantener el foco
   const gameContainerRef = useRef(null);
@@ -361,6 +372,28 @@ const Game = () => {
       return;
     }
     
+    // Manejar la tecla Y para activar/desactivar el chat
+    if (event.key === 'y' || event.key === 'Y') {
+      if (isChatting) {
+        // Si ya estaba chateando, enviar el mensaje y salir del modo chat
+        if (chatInputValue.trim()) {
+          sendChatMessage(chatInputValue.trim());
+        }
+        setIsChatting(false);
+        setChatInputValue('');
+      } else {
+        // Activar el modo chat
+        setIsChatting(true);
+      }
+      event.preventDefault();
+      return;
+    }
+    
+    // Si está en modo chat, no procesar teclas de movimiento
+    if (isChatting) {
+      return;
+    }
+    
     let newX = position.x;
     let newY = position.y;
     let newDirection = direction;
@@ -474,6 +507,47 @@ const Game = () => {
     }
   };
 
+  // Manejar cambios en el input de chat
+  const handleChatInputChange = (e) => {
+    setChatInputValue(e.target.value);
+  };
+
+  // Manejar envío de mensaje de chat
+  const handleChatSubmit = (e) => {
+    e.preventDefault();
+    if (chatInputValue.trim()) {
+      sendChatMessage(chatInputValue.trim());
+      setIsChatting(false);
+      setChatInputValue('');
+    }
+  };
+
+  // Función para enviar mensaje de chat a Firebase
+  const sendChatMessage = (message) => {
+    if (!currentUser) return;
+    
+    const playerRef = ref(database, `online_players/${currentUser.uid}`);
+    
+    // Actualizar el mensaje de chat en Firebase
+    update(playerRef, {
+      chatMessage: message,
+      chatTimestamp: serverTimestamp()
+    }).catch(error => {
+      console.error('Error al enviar mensaje de chat:', error);
+    });
+    
+    // Establecer un temporizador para borrar el mensaje después de un tiempo
+    setTimeout(() => {
+      if (currentUser) {
+        update(playerRef, { chatMessage: null });
+        setChatMessage(null);
+      }
+    }, 5000); // El mensaje desaparece después de 5 segundos
+    
+    // Actualizar el estado local
+    setChatMessage(message);
+  };
+
   // Mantener el foco en el contenedor del juego
   useEffect(() => {
     if (gameContainerRef.current) {
@@ -491,7 +565,16 @@ const Game = () => {
       window.removeEventListener('keydown', handleKeyDown);
       window.removeEventListener('keyup', handleKeyUp);
     };
-  }, [position, gameStarted, direction, lastDirection, canMove]); // Incluir todas las dependencias necesarias
+  }, [
+    position, 
+    gameStarted, 
+    direction, 
+    lastDirection, 
+    canMove, 
+    isChatting, 
+    chatInputValue, 
+    chatMessage
+  ]); // Incluir todas las dependencias necesarias
 
   // Referencia para el personaje
   const characterRef = useRef(null);
@@ -664,6 +747,11 @@ const Game = () => {
                   {player.username || 'Jugador'}
                 </div>
                 <div>X:{player.position?.x || 0}, Y:{player.position?.y || 0}</div>
+                {player.chatMessage && (
+                  <div style={{ color: 'yellow' }}>
+                    {player.username || 'Jugador'}: {player.chatMessage}
+                  </div>
+                )}
               </li>
             ))}
           </ul>
@@ -701,6 +789,7 @@ const Game = () => {
               username={playerData.username || 'Jugador'}
               isMoving={playerData.isMoving}
               visible={!playerData.isInactive} // Ocultar jugadores inactivos
+              chatMessage={playerData.chatMessage}
             />
           ))}
 
@@ -710,7 +799,9 @@ const Game = () => {
             direction={direction}
             isKeyPressed={isKeyPressed}
             ref={characterRef}
-            username={currentUser?.displayName}
+            username={currentUser?.displayName || currentUser?.email || 'Jugador'}
+            chatMessage={chatMessage}
+            isChatting={isChatting}
           />
         </div>
         <p>
@@ -719,6 +810,41 @@ const Game = () => {
             : "Presiona ENTER para comenzar el juego"}
         </p>
       </div>
+      
+      {/* Interfaz de chat */}
+      {gameStarted && isChatting && (
+        <div className="chat-interface">
+          <form onSubmit={handleChatSubmit}>
+            <input 
+              type="text" 
+              value={chatInputValue}
+              onChange={handleChatInputChange}
+              placeholder="Escribe un mensaje..."
+              autoFocus
+              maxLength="100"
+            />
+            <button type="submit">Enviar</button>
+            <div className="chat-help">Presiona Y para cancelar</div>
+          </form>
+        </div>
+      )}
+      
+      {/* Instrucciones de chat */}
+      {gameStarted && !isChatting && (
+        <div className="chat-instructions" style={{
+          position: 'absolute',
+          bottom: '10px',
+          left: '50%',
+          transform: 'translateX(-50%)',
+          backgroundColor: 'rgba(0, 0, 0, 0.6)',
+          color: 'white',
+          padding: '5px 10px',
+          borderRadius: '5px',
+          fontSize: '12px'
+        }}>
+          Presiona Y para chatear
+        </div>
+      )}
     </div>
   );
 };

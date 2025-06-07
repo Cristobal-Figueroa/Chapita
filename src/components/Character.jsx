@@ -5,6 +5,7 @@ import dazRunRightSprite from '../assets/sprites/daz-run-right.png'; // Sprite p
 import dazStandSprite from '../assets/sprites/daz-stand.png'; // Sprite para cuando está quieto
 import dazLeftSprite from '../assets/sprites/daz-left.png'; // Sprite para girar a la izquierda
 import { TILE_SIZE } from '../assets/maps/map1';
+import '../styles/chatBubble.css'; // Importamos los estilos para el globo de chat
 
 // Factor de escala para el tamaño del sprite del personaje
 const SPRITE_SCALE = 1.5; // Aumentar este valor para hacer el sprite más grande
@@ -26,7 +27,9 @@ const Character = forwardRef(({
   isKeyPressed = false, 
   isOtherPlayer = false, 
   username = 'Jugador',
-  isMoving = false
+  isMoving = false,
+  chatMessage = null, // Mensaje de chat actual
+  isChatting = false // Indica si el personaje está chateando
 }, ref) => {
   // Estados para la posición visual del personaje (para animaciones suaves)
   const [visualPosition, setVisualPosition] = useState({ x: position.x, y: position.y });
@@ -328,6 +331,20 @@ const Character = forwardRef(({
         alignItems: 'center',
         zIndex: 10
       }}>
+      {/* Globo de chat */}
+      {chatMessage && (
+        <div className="chat-bubble" style={{
+          backgroundColor: isOtherPlayer ? 
+            `${playerColor}ee` : // Color semi-transparente para otros jugadores
+            'rgba(255, 255, 255, 0.95)', // Blanco semi-transparente para el jugador principal
+          color: isOtherPlayer ? 'white' : '#333',
+          borderColor: isOtherPlayer ? playerColor : 'rgba(0, 0, 0, 0.2)'
+        }}>
+          <div className="chat-message">{chatMessage}</div>
+          <div className="chat-tail"></div>
+        </div>
+      )}
+      
       {/* Nombre de usuario */}
       {username && (
         <div className="character-name" style={{
