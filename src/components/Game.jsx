@@ -10,6 +10,9 @@ const Game = () => {
   // Posición inicial del personaje (coordenadas en el mapa)
   const [position, setPosition] = useState({ x: 5, y: 5 });
   
+  // Estado para la dirección del personaje (izquierda o derecha)
+  const [direction, setDirection] = useState('left');
+  
   // Referencia para el contenedor del juego para mantener el foco
   const gameContainerRef = useRef(null);
 
@@ -37,6 +40,7 @@ const Game = () => {
     
     let newX = position.x;
     let newY = position.y;
+    let newDirection = direction;
 
     switch (event.key) {
       case 'ArrowUp':
@@ -47,13 +51,18 @@ const Game = () => {
         break;
       case 'ArrowLeft':
         newX -= 1;
+        newDirection = 'left'; // Actualizar dirección a izquierda
         break;
       case 'ArrowRight':
         newX += 1;
+        newDirection = 'right'; // Actualizar dirección a derecha
         break;
       default:
         return; // Ignorar otras teclas
     }
+
+    // Actualizar la dirección del personaje
+    setDirection(newDirection);
 
     // Actualizar la posición solo si es válida
     if (isValidPosition(newX, newY)) {
@@ -76,7 +85,7 @@ const Game = () => {
     return () => {
       window.removeEventListener('keydown', handleKeyDown);
     };
-  }, [position, gameStarted]); // Dependencias: position y gameStarted
+  }, [position, gameStarted, direction]); // Dependencias: position, gameStarted y direction
 
   return (
     <div className="game-container">
@@ -87,7 +96,11 @@ const Game = () => {
         tabIndex="0" // Permite que el div reciba el foco
       >
         <GameMap />
-        <Character position={position} visible={gameStarted} />
+        <Character 
+          position={position} 
+          visible={gameStarted} 
+          direction={direction} // Pasar la dirección al componente Character
+        />
         
         {!gameStarted && (
           <div className="start-screen">
