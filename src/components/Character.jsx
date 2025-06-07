@@ -6,7 +6,24 @@ import dazStandSprite from '../assets/sprites/daz-stand.png'; // Sprite para cua
 import dazLeftSprite from '../assets/sprites/daz-left.png'; // Sprite para girar a la izquierda
 import { TILE_SIZE } from '../assets/maps/map1';
 
-const Character = forwardRef(({ position, visible = true, direction = 'left', isKeyPressed = false }, ref) => {
+// Colores para diferenciar jugadores
+const PLAYER_COLORS = [
+  '#FF5733', // Naranja
+  '#33FF57', // Verde
+  '#3357FF', // Azul
+  '#FF33F5', // Rosa
+  '#33FFF5', // Cian
+  '#F5FF33'  // Amarillo
+];
+
+const Character = forwardRef(({ 
+  position, 
+  visible = true, 
+  direction = 'left', 
+  isKeyPressed = false, 
+  isOtherPlayer = false, 
+  username = 'Jugador'
+}, ref) => {
   // Estados para la posición visual del personaje (para animaciones suaves)
   const [visualPosition, setVisualPosition] = useState({ x: position.x, y: position.y });
   const [isMoving, setIsMoving] = useState(false);
@@ -177,26 +194,76 @@ const Character = forwardRef(({ position, visible = true, direction = 'left', is
   const offsetX = (TILE_SIZE - CHARACTER_SIZE) / 2;
   const offsetY = (TILE_SIZE - CHARACTER_SIZE) / 2;
   
-  // Estilo para el personaje
-  const characterStyle = {
-    position: 'absolute',
-    left: `${visualPosition.x * TILE_SIZE + offsetX}px`,
-    top: `${visualPosition.y * TILE_SIZE + offsetY}px`,
-    width: `${CHARACTER_SIZE}px`,
-    height: `${CHARACTER_SIZE}px`,
-    backgroundImage: `url(${currentSprite})`,
-    backgroundSize: 'contain',
-    backgroundRepeat: 'no-repeat',
-    backgroundPosition: 'center',
-    transform: `${bounce}`,
-    zIndex: 10,
-    // Transición suave para el movimiento entre casillas (ajustada a la nueva velocidad)
-    transition: 'left 0.15s ease-in-out, top 0.15s ease-in-out, transform 0.15s',
-    filter: isMoving ? 'brightness(1.3) drop-shadow(0 0 5px rgba(255, 255, 255, 0.7))' : 'brightness(1.1) drop-shadow(0 0 3px rgba(255, 255, 255, 0.5))', // Efecto de brillo mejorado
-    imageRendering: 'pixelated' // Mantener el aspecto pixelado al hacer zoom
+  // Generar un color único basado en el nombre de usuario para otros jugadores
+  const getPlayerColor = () => {
+    if (!isOtherPlayer) return null; // Solo aplicar a otros jugadores
+    
+    // Generar un índice basado en el nombre de usuario
+    let hash = 0;
+    for (let i = 0; i < username.length; i++) {
+      hash = username.charCodeAt(i) + ((hash << 5) - hash);
+    }
+    
+    // Usar el hash para seleccionar un color del array
+    const colorIndex = Math.abs(hash) % PLAYER_COLORS.length;
+    return PLAYER_COLORS[colorIndex];
   };
-
-  return <div style={characterStyle} ref={ref} />;
+  
+  const playerColor = getPlayerColor();
+  
+  return (
+    <div className="character-container" style={{
+      position: 'absolute',
+      left: `${visualPosition.x * TILE_SIZE}px`,
+      top: `${visualPosition.y * TILE_SIZE}px`,
+      width: `${TILE_SIZE}px`,
+      display: visible ? 'flex' : 'none',
+      flexDirection: 'column',
+      alignItems: 'center',
+      zIndex: 10
+    }}>
+      {/* Nombre de usuario */}
+      {username && (
+        <div className="character-name" style={{
+          position: 'absolute',
+          top: '-20px',
+          width: '100px',
+          textAlign: 'center',
+          transform: 'translateX(-25%)',
+          backgroundColor: isOtherPlayer ? playerColor : '#4CAF50',
+          color: 'white',
+          padding: '2px 5px',
+          borderRadius: '3px',
+          fontSize: '12px',
+          fontWeight: 'bold',
+          whiteSpace: 'nowrap',
+          overflow: 'hidden',
+          textOverflow: 'ellipsis',
+          boxShadow: '0 1px 3px rgba(0, 0, 0, 0.3)'
+        }}>
+          {username}
+        </div>
+      )}
+      
+      {/* Sprite del personaje */}
+      <div
+        ref={ref}
+        className="character-sprite"
+        style={{
+          width: `${TILE_SIZE}px`,
+          height: `${TILE_SIZE}px`,
+          backgroundImage: `url(${currentSprite})`,
+          backgroundSize: 'contain',
+          backgroundRepeat: 'no-repeat',
+          backgroundPosition: 'center',
+          transition: isMoving ? 'none' : 'left 0.2s ease-out, top 0.2s ease-out',
+          filter: isOtherPlayer 
+            ? `drop-shadow(0 0 5px ${playerColor}) drop-shadow(2px 2px 2px rgba(0, 0, 0, 0.5))` 
+            : 'drop-shadow(2px 2px 2px rgba(0, 0, 0, 0.5))' // Sombra suave
+        }}
+      />
+    </div>
+  );
 });
 
 export default Character;

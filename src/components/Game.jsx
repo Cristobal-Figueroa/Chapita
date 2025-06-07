@@ -1,11 +1,23 @@
 import React, { useState, useEffect, useRef } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { ref, set, onValue, off, update } from 'firebase/database';
+import { database } from '../firebase/config';
+import { useAuth } from '../contexts/AuthContext';
 import GameMap from './GameMap';
 import Character from './Character';
+import OnlinePlayers from './OnlinePlayers';
 import { map1, TILE_SIZE } from '../assets/maps/map1';
 
 const Game = () => {
+  // Obtener el usuario actual y funciones de autenticación
+  const { currentUser, logout, getUserData, updateUserData } = useAuth();
+  const navigate = useNavigate();
+  
   // Estado para controlar si el juego ha comenzado
   const [gameStarted, setGameStarted] = useState(false);
+  
+  // Estado para los jugadores online
+  const [onlinePlayers, setOnlinePlayers] = useState({});
   
   // Posición inicial del personaje (coordenadas en el mapa)
   const [position, setPosition] = useState({ x: 12, y: 12 });
@@ -22,11 +34,123 @@ const Game = () => {
   // Estado para detectar si hay alguna tecla de movimiento presionada actualmente
   const [isKeyPressed, setIsKeyPressed] = useState(false);
   
+  // Estado para la posición de la cámara
+  const [cameraPosition, setCameraPosition] = useState({ x: 0, y: 0 });
+  
   // Constante para la velocidad de movimiento (en ms)
   const MOVEMENT_SPEED = 150; // 150ms entre movimientos (más rápido)
   
   // Referencia para el contenedor del juego para mantener el foco
   const gameContainerRef = useRef(null);
+  
+  // Cargar datos del usuario al iniciar
+  useEffect(() => {
+    const loadUserData = async () => {
+      if (currentUser) {
+        try {
+          const userData = await getUserData(currentUser.uid);
+          if (userData) {
+            // Establecer posición y dirección guardadas
+            if (userData.position) {
+              setPosition(userData.position);
+            }
+            if (userData.lastDirection) {
+              setDirection(userData.lastDirection);
+              setLastDirection(userData.lastDirection);
+            }
+          }
+        } catch (error) {
+          console.error('Error al cargar datos del usuario:', error);
+        }
+      } else {
+        // Si no hay usuario autenticado, redirigir al login
+        navigate('/login');
+      }
+    };
+    
+    loadUserData();
+  }, [currentUser, getUserData, navigate]);
+  
+  // Actualizar estado online del jugador y escuchar a otros jugadores
+  useEffect(() => {
+    if (!currentUser) return;
+    
+    // Referencia al jugador actual
+    const currentPlayerRef = ref(database, `online_players/${currentUser.uid}`);
+    
+    // Referencia a todos los jugadores online
+    const onlinePlayersRef = ref(database, 'online_players');
+    
+    // Marcar al jugador como online y guardar sus datos iniciales
+    const setPlayerOnline = async () => {
+      try {
+        const userData = await getUserData(currentUser.uid);
+        await set(currentPlayerRef, {
+          username: currentUser.displayName || 'Jugador',
+          position,
+          lastDirection,
+          lastUpdated: new Date().toISOString(),
+          ...userData
+        });
+      } catch (error) {
+        console.error('Error al marcar jugador como online:', error);
+      }
+    };
+    
+    setPlayerOnline();
+    
+    // Escuchar cambios en los jugadores online
+    const unsubscribe = onValue(onlinePlayersRef, (snapshot) => {
+      const players = {};
+      snapshot.forEach((childSnapshot) => {
+        // No incluir al jugador actual
+        if (childSnapshot.key !== currentUser.uid) {
+          players[childSnapshot.key] = childSnapshot.val();
+        }
+      });
+      setOnlinePlayers(players);
+    });
+    
+    // Limpiar al desmontar
+    return () => {
+      // Marcar al jugador como offline
+      set(currentPlayerRef, null);
+      // Dejar de escuchar cambios
+      off(onlinePlayersRef);
+    };
+  }, [currentUser, position, lastDirection]);
+  
+  // Función para actualizar la posición del jugador en la base de datos
+  const updatePlayerPosition = () => {
+    if (!currentUser) return;
+    
+    const playerRef = ref(database, `online_players/${currentUser.uid}`);
+    update(playerRef, {
+      position,
+      lastDirection,
+      lastUpdated: new Date().toISOString()
+    });
+    
+    // También actualizar en el perfil del usuario
+    updateUserData(currentUser.uid, { position, lastDirection });
+  };
+  
+  // Actualizar la posición en la base de datos cuando cambia
+  useEffect(() => {
+    if (gameStarted && currentUser) {
+      updatePlayerPosition();
+    }
+  }, [position, lastDirection, gameStarted]);
+  
+  // Función para cerrar sesión
+  const handleLogout = async () => {
+    try {
+      await logout();
+      navigate('/login');
+    } catch (error) {
+      console.error('Error al cerrar sesión:', error);
+    }
+  };
 
   // Función para verificar si una posición es válida (dentro del mapa y no es un obstáculo)
   const isValidPosition = (x, y) => {
@@ -211,12 +335,8 @@ const Game = () => {
       scrollX = Math.max(0, Math.min(scrollX, mapWidth - viewportWidth));
       scrollY = Math.max(0, Math.min(scrollY, mapHeight - viewportHeight));
       
-      // Desplazar el viewport para centrar al personaje
-      viewportRef.current.scrollTo({
-        left: scrollX,
-        top: scrollY,
-        behavior: 'smooth'
-      });
+      // Actualizar la posición de la cámara
+      setCameraPosition({ x: scrollX, y: scrollY });
     }
   };
   
@@ -238,56 +358,179 @@ const Game = () => {
     }
   }, [gameStarted]);
   
-  // Calcular el estilo para el contenedor del mapa
-  const mapContainerStyle = {
-    position: 'relative',
-    width: `${map1[0].length * TILE_SIZE}px`,
-    height: `${map1.length * TILE_SIZE}px`,
-  };
-
-  // Estilo para el viewport que muestra una porción del mapa
-  const viewportStyle = {
-    position: 'relative',
-    width: '100%',
-    height: '70vh', // Aumentado para mostrar mejor el mapa con zoom
-    overflow: 'auto',
-    border: '6px solid #333',
-    boxShadow: '0 0 20px rgba(0, 0, 0, 0.7)',
-    scrollbarWidth: 'none', // Ocultar scrollbar en Firefox
-    msOverflowStyle: 'none', // Ocultar scrollbar en IE/Edge
-    backgroundColor: '#1a2f1a', // Fondo oscuro para el borde del mapa
-  };
 
   return (
-    <div className="game-container">
-      <h2>Juego Pokémon PixelArt</h2>
-      <div 
-        className="game-board" 
-        style={viewportStyle}
-        ref={(el) => {
-          gameContainerRef.current = el;
-          viewportRef.current = el;
+    <div
+      className="game-container"
+      ref={gameContainerRef}
+      tabIndex="0"
+      style={{
+        position: 'relative',
+        width: '100vw',
+        height: '100vh',
+        overflow: 'hidden',
+        backgroundColor: '#87CEEB', // Cielo azul claro
+        outline: 'none' // Quitar el borde de foco
+      }}
+    >
+      {!gameStarted ? (
+        <div
+          className="start-screen"
+          style={{
+            position: 'absolute',
+            top: 0,
+            left: 0,
+            width: '100%',
+            height: '100%',
+            display: 'flex',
+            flexDirection: 'column',
+            justifyContent: 'center',
+            alignItems: 'center',
+            backgroundColor: 'rgba(0, 0, 0, 0.7)',
+            color: 'white',
+            zIndex: 10
+          }}
+        >
+          <h1>Chapita</h1>
+          <p>Bienvenido, {currentUser?.displayName || 'Jugador'}</p>
+          <p>Presiona ENTER para comenzar</p>
+        </div>
+      ) : null}
+
+      {/* Panel de información y controles */}
+      <div
+        className="game-ui"
+        style={{
+          position: 'absolute',
+          top: '10px',
+          right: '10px',
+          padding: '10px',
+          backgroundColor: 'rgba(0, 0, 0, 0.7)',
+          color: 'white',
+          borderRadius: '5px',
+          zIndex: 5,
+          display: 'flex',
+          flexDirection: 'column',
+          gap: '10px'
         }}
-        tabIndex="0"
       >
-        <div style={mapContainerStyle}>
-          <GameMap />
-          <Character 
-            position={position} 
-            visible={gameStarted} 
+        <div className="user-info">
+          <p>Jugador: {currentUser?.displayName || 'Anónimo'}</p>
+          <p>Posición: X:{position.x}, Y:{position.y}</p>
+        </div>
+
+        <button
+          onClick={() => navigate('/profile')}
+          style={{
+            padding: '5px 10px',
+            backgroundColor: '#4CAF50',
+            color: 'white',
+            border: 'none',
+            borderRadius: '3px',
+            cursor: 'pointer'
+          }}
+        >
+          Perfil
+        </button>
+
+        <button
+          onClick={handleLogout}
+          style={{
+            padding: '5px 10px',
+            backgroundColor: '#f44336',
+            color: 'white',
+            border: 'none',
+            borderRadius: '3px',
+            cursor: 'pointer'
+          }}
+        >
+          Cerrar Sesión
+        </button>
+      </div>
+
+      {/* Panel de jugadores online */}
+      <div
+        className="online-players-panel"
+        style={{
+          position: 'absolute',
+          top: '10px',
+          left: '10px',
+          width: '200px',
+          maxHeight: '300px',
+          overflowY: 'auto',
+          padding: '10px',
+          backgroundColor: 'rgba(0, 0, 0, 0.7)',
+          color: 'white',
+          borderRadius: '5px',
+          zIndex: 5
+        }}
+      >
+        <h3>Jugadores Online ({Object.keys(onlinePlayers).length})</h3>
+        {Object.keys(onlinePlayers).length === 0 ? (
+          <p>No hay otros jugadores online</p>
+        ) : (
+          <ul style={{ listStyleType: 'none', padding: 0 }}>
+            {Object.entries(onlinePlayers).map(([id, player]) => (
+              <li
+                key={id}
+                style={{
+                  marginBottom: '5px',
+                  padding: '5px',
+                  backgroundColor: 'rgba(255, 255, 255, 0.1)',
+                  borderRadius: '3px'
+                }}
+              >
+                <div style={{ fontWeight: 'bold' }}>
+                  {player.username || 'Jugador'}
+                </div>
+                <div>X:{player.position?.x || 0}, Y:{player.position?.y || 0}</div>
+              </li>
+            ))}
+          </ul>
+        )}
+      </div>
+
+      <div
+        className="viewport"
+        ref={viewportRef}
+        style={{
+          position: 'absolute',
+          width: '100%',
+          height: '100%',
+          overflow: 'hidden'
+        }}
+      >
+        <div
+          className="game-world"
+          style={{
+            position: 'absolute',
+            transform: `translate(${-cameraPosition.x}px, ${-cameraPosition.y}px)`,
+            transition: 'transform 0.2s ease-out'
+          }}
+        >
+          <GameMap map={map1} />
+
+          {/* Renderizar personajes de otros jugadores */}
+          {Object.entries(onlinePlayers).map(([id, player]) => (
+            <Character
+              key={id}
+              position={player.position || { x: 0, y: 0 }}
+              direction={player.lastDirection || 'down'}
+              isKeyPressed={false}
+              isOtherPlayer={true}
+              username={player.username}
+            />
+          ))}
+
+          {/* Personaje del jugador actual */}
+          <Character
+            position={position}
             direction={direction}
             isKeyPressed={isKeyPressed}
             ref={characterRef}
+            username={currentUser?.displayName}
           />
         </div>
-        
-        {!gameStarted && (
-          <div className="start-screen">
-            <p>Presiona ENTER para comenzar</p>
-          </div>
-        )}
-      </div>
-      <div className="game-instructions">
         <p>
           {gameStarted 
             ? "Usa las flechas del teclado para mover al personaje" 
