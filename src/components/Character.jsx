@@ -36,13 +36,14 @@ const Character = forwardRef(({ position, visible = true, direction = 'left' }, 
     width: `${TILE_SIZE}px`,
     height: `${TILE_SIZE}px`,
     backgroundImage: `url(${dazSprite})`,
-    backgroundSize: 'contain',
+    backgroundSize: 'contain', // Mantener el tamaño original del PNG
     backgroundRepeat: 'no-repeat',
     backgroundPosition: 'center',
     transform: `${direction === 'right' ? 'scaleX(-1)' : 'scaleX(1)'} ${bounce}`,
     zIndex: 10,
     transition: 'all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275)', // Transición más suave con efecto de rebote
-    filter: isMoving ? 'brightness(1.2)' : 'brightness(1)' // Efecto de brillo al moverse
+    filter: isMoving ? 'brightness(1.3) drop-shadow(0 0 5px rgba(255, 255, 255, 0.7))' : 'brightness(1.1) drop-shadow(0 0 3px rgba(255, 255, 255, 0.5))', // Efecto de brillo mejorado
+    imageRendering: 'pixelated' // Mantener el aspecto pixelado al hacer zoom
   };
 
   return <div style={characterStyle} ref={ref} />;

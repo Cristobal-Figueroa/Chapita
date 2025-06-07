@@ -128,12 +128,13 @@ const Game = () => {
   const viewportStyle = {
     position: 'relative',
     width: '100%',
-    height: '65vh',
+    height: '70vh', // Aumentado para mostrar mejor el mapa con zoom
     overflow: 'auto',
     border: '6px solid #333',
     boxShadow: '0 0 20px rgba(0, 0, 0, 0.7)',
     scrollbarWidth: 'none', // Ocultar scrollbar en Firefox
     msOverflowStyle: 'none', // Ocultar scrollbar en IE/Edge
+    backgroundColor: '#1a2f1a', // Fondo oscuro para el borde del mapa
   };
 
   return (
