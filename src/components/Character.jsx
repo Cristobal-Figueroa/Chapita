@@ -128,6 +128,9 @@ const Character = forwardRef(({
     }
   }, [position, visualPosition, isOtherPlayer]);
   
+  // Determinar si el personaje está en movimiento basado en props o estado interno
+  const effectiveIsMoving = isOtherPlayer ? isMoving || isMovingState : isMovingState;
+  
   // Efecto separado para manejar cambios de dirección
   useEffect(() => {
     // Actualizar la dirección y el contador de movimientos
@@ -156,12 +159,9 @@ const Character = forwardRef(({
         setMoveCount(prevCount => prevCount + 1);
       }
     }
-  }, [direction, lastDirection, isMoving]);
+  }, [direction, lastDirection, effectiveIsMoving, isMovingState, isMoving]);
   
   if (!visible) return null;
-  
-  // Determinar si el personaje está en movimiento basado en props o estado interno
-  const effectiveIsMoving = isOtherPlayer ? isMoving || isMovingState : isMovingState;
   
   // Calcular un ligero rebote para la animación de movimiento
   const bounce = effectiveIsMoving ? 'translateY(-5px)' : 'translateY(0)'; 
