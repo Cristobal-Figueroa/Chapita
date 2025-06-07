@@ -6,6 +6,9 @@ import dazStandSprite from '../assets/sprites/daz-stand.png'; // Sprite para cua
 import dazLeftSprite from '../assets/sprites/daz-left.png'; // Sprite para girar a la izquierda
 import { TILE_SIZE } from '../assets/maps/map1';
 
+// Factor de escala para el tamaño del sprite del personaje
+const SPRITE_SCALE = 1.5; // Aumentar este valor para hacer el sprite más grande
+
 // Colores para diferenciar jugadores
 const PLAYER_COLORS = [
   '#FF5733', // Naranja
@@ -226,7 +229,7 @@ const Character = forwardRef(({
       {username && (
         <div className="character-name" style={{
           position: 'absolute',
-          top: '-20px',
+          top: `-${20 + (SPRITE_SCALE - 1) * 10}px`, // Ajustar la posición del nombre según el tamaño del sprite
           width: '100px',
           textAlign: 'center',
           transform: 'translateX(-25%)',
@@ -239,7 +242,8 @@ const Character = forwardRef(({
           whiteSpace: 'nowrap',
           overflow: 'hidden',
           textOverflow: 'ellipsis',
-          boxShadow: '0 1px 3px rgba(0, 0, 0, 0.3)'
+          boxShadow: '0 1px 3px rgba(0, 0, 0, 0.3)',
+          zIndex: 20
         }}>
           {username}
         </div>
@@ -250,13 +254,14 @@ const Character = forwardRef(({
         ref={ref}
         className="character-sprite"
         style={{
-          width: `${TILE_SIZE}px`,
-          height: `${TILE_SIZE}px`,
+          width: `${TILE_SIZE * SPRITE_SCALE}px`,
+          height: `${TILE_SIZE * SPRITE_SCALE}px`,
           backgroundImage: `url(${currentSprite})`,
           backgroundSize: 'contain',
           backgroundRepeat: 'no-repeat',
           backgroundPosition: 'center',
           transition: isMoving ? 'none' : 'left 0.2s ease-out, top 0.2s ease-out',
+          transform: `translate(${-TILE_SIZE * (SPRITE_SCALE - 1) / 2}px, ${-TILE_SIZE * (SPRITE_SCALE - 1) / 2}px)`,
           filter: isOtherPlayer 
             ? `drop-shadow(0 0 5px ${playerColor}) drop-shadow(2px 2px 2px rgba(0, 0, 0, 0.5))` 
             : 'drop-shadow(2px 2px 2px rgba(0, 0, 0, 0.5))' // Sombra suave
