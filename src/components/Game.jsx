@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import GameMap from './GameMap';
 import Character from './Character';
-import { map1 } from '../assets/maps/map1';
+import { map1, TILE_SIZE } from '../assets/maps/map1';
 
 const Game = () => {
   // Estado para controlar si el juego ha comenzado
@@ -23,9 +23,9 @@ const Game = () => {
       return false;
     }
     
-    // Verificar si es un obstáculo (1: árbol, 2: agua, 3: casa)
+    // Verificar si es un obstáculo (1: árbol, 2: agua, 3: casa, 7: árboles densos)
     const tileType = map1[y][x];
-    return ![1, 2, 3].includes(tileType);
+    return ![1, 2, 3, 7].includes(tileType);
   };
 
   // Manejar el movimiento del personaje con las teclas de flecha
@@ -87,20 +87,76 @@ const Game = () => {
     };
   }, [position, gameStarted, direction]); // Dependencias: position, gameStarted y direction
 
+  // Referencia para el personaje
+  const characterRef = useRef(null);
+  
+  // Referencia para el viewport
+  const viewportRef = useRef(null);
+  
+  // Efecto para centrar la vista en el personaje cuando se mueve
+  useEffect(() => {
+    if (characterRef.current && viewportRef.current && gameStarted) {
+      // Calcular la posición del personaje en píxeles
+      const characterX = position.x * TILE_SIZE + TILE_SIZE / 2;
+      const characterY = position.y * TILE_SIZE + TILE_SIZE / 2;
+      
+      // Obtener las dimensiones del viewport
+      const viewportWidth = viewportRef.current.clientWidth;
+      const viewportHeight = viewportRef.current.clientHeight;
+      
+      // Calcular la posición de desplazamiento para centrar al personaje
+      const scrollX = characterX - viewportWidth / 2;
+      const scrollY = characterY - viewportHeight / 2;
+      
+      // Desplazar el viewport para centrar al personaje
+      viewportRef.current.scrollTo({
+        left: scrollX,
+        top: scrollY,
+        behavior: 'smooth'
+      });
+    }
+  }, [position, gameStarted]);
+  
+  // Calcular el estilo para el contenedor del mapa
+  const mapContainerStyle = {
+    position: 'relative',
+    width: `${map1[0].length * TILE_SIZE}px`,
+    height: `${map1.length * TILE_SIZE}px`,
+  };
+
+  // Estilo para el viewport que muestra una porción del mapa
+  const viewportStyle = {
+    position: 'relative',
+    width: '100%',
+    height: '65vh',
+    overflow: 'auto',
+    border: '6px solid #333',
+    boxShadow: '0 0 20px rgba(0, 0, 0, 0.7)',
+    scrollbarWidth: 'none', // Ocultar scrollbar en Firefox
+    msOverflowStyle: 'none', // Ocultar scrollbar en IE/Edge
+  };
+
   return (
     <div className="game-container">
       <h2>Juego Pokémon PixelArt</h2>
       <div 
         className="game-board" 
-        ref={gameContainerRef}
-        tabIndex="0" // Permite que el div reciba el foco
+        style={viewportStyle}
+        ref={(el) => {
+          gameContainerRef.current = el;
+          viewportRef.current = el;
+        }}
+        tabIndex="0"
       >
-        <GameMap />
-        <Character 
-          position={position} 
-          visible={gameStarted} 
-          direction={direction} // Pasar la dirección al componente Character
-        />
+        <div style={mapContainerStyle}>
+          <GameMap />
+          <Character 
+            position={position} 
+            visible={gameStarted} 
+            direction={direction}
+            ref={characterRef}
+          />
+        </div>
         
         {!gameStarted && (
           <div className="start-screen">

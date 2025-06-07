@@ -1,8 +1,8 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, forwardRef } from 'react';
 import dazSprite from '../assets/sprites/daz.png';
 import { TILE_SIZE } from '../assets/maps/map1';
 
-const Character = ({ position, visible = true, direction = 'left' }) => {
+const Character = forwardRef(({ position, visible = true, direction = 'left' }, ref) => {
   // Estados para la posición visual del personaje (para animaciones suaves)
   const [visualPosition, setVisualPosition] = useState({ x: position.x, y: position.y });
   const [isMoving, setIsMoving] = useState(false);
@@ -28,25 +28,24 @@ const Character = ({ position, visible = true, direction = 'left' }) => {
   // Calcular un ligero rebote para la animación de movimiento
   const bounce = isMoving ? 'translateY(-5px)' : 'translateY(0)'; 
   
-  return (
-    <div
-      style={{
-        position: 'absolute',
-        left: `${visualPosition.x * TILE_SIZE}px`,
-        top: `${visualPosition.y * TILE_SIZE}px`,
-        width: `${TILE_SIZE}px`,
-        height: `${TILE_SIZE}px`,
-        backgroundImage: `url(${dazSprite})`,
-        backgroundSize: 'contain',
-        backgroundPosition: 'center',
-        backgroundRepeat: 'no-repeat',
-        transform: `${direction === 'right' ? 'scaleX(-1)' : 'scaleX(1)'} ${bounce}`,
-        zIndex: 10,
-        transition: 'all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275)', // Transición más suave con efecto de rebote
-        filter: isMoving ? 'brightness(1.2)' : 'brightness(1)' // Efecto de brillo al moverse
-      }}
-    />
-  );
-};
+  // Estilo para el personaje
+  const characterStyle = {
+    position: 'absolute',
+    left: `${visualPosition.x * TILE_SIZE}px`,
+    top: `${visualPosition.y * TILE_SIZE}px`,
+    width: `${TILE_SIZE}px`,
+    height: `${TILE_SIZE}px`,
+    backgroundImage: `url(${dazSprite})`,
+    backgroundSize: 'contain',
+    backgroundRepeat: 'no-repeat',
+    backgroundPosition: 'center',
+    transform: `${direction === 'right' ? 'scaleX(-1)' : 'scaleX(1)'} ${bounce}`,
+    zIndex: 10,
+    transition: 'all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275)', // Transición más suave con efecto de rebote
+    filter: isMoving ? 'brightness(1.2)' : 'brightness(1)' // Efecto de brillo al moverse
+  };
+
+  return <div style={characterStyle} ref={ref} />;
+});
 
 export default Character;
