@@ -36,10 +36,10 @@ const Character = forwardRef(({ position, visible = true, direction = 'left', is
       if (!idleTimer) {
         console.log('Teclas liberadas, iniciando temporizador de reposo');
         const timer = setTimeout(() => {
-          console.log('1.6 segundos sin presionar teclas, cambiando a reposo');
+          console.log('0.5 segundos sin presionar teclas, cambiando a reposo');
           // Pasar a estado de reposo pero manteniendo la orientación
           setIsIdle(true);
-        }, 1600); // 1.6 segundos
+        }, 500); // 0.5 segundos
         setIdleTimer(timer);
       }
     }
@@ -113,10 +113,10 @@ const Character = forwardRef(({ position, visible = true, direction = 'left', is
   // Seleccionar el sprite adecuado según el estado (movimiento, quieto, reposo) y dirección
   let currentSprite;
   
-  // Primero verificamos si está en estado de reposo (1.6 segundos sin teclas)
+  // Primero verificamos si está en estado de reposo (0.5 segundos sin teclas)
   if (isIdle) {
     // Estado de reposo: mostrar sprite estático según la última dirección
-    console.log('ESTADO: REPOSO (1.6 segundos sin teclas) - Orientación: ' + 
+    console.log('ESTADO: REPOSO (0.5 segundos sin teclas) - Orientación: ' + 
                (lastDirection === 'right' ? 'DERECHA' : 
                 lastDirection === 'left' ? 'IZQUIERDA' : 'ABAJO'));
                 
