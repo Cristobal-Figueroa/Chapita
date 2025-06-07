@@ -20,7 +20,7 @@ const Game = () => {
   const [canMove, setCanMove] = useState(true);
   
   // Constante para la velocidad de movimiento (en ms)
-  const MOVEMENT_SPEED = 200; // 200ms entre movimientos
+  const MOVEMENT_SPEED = 150; // 150ms entre movimientos (más rápido)
   
   // Referencia para el contenedor del juego para mantener el foco
   const gameContainerRef = useRef(null);

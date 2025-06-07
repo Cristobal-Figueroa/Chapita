@@ -33,7 +33,7 @@ const Character = forwardRef(({ position, visible = true, direction = 'left' }, 
     setVisualPosition({ x: position.x, y: position.y });
     
     // Después de completar el movimiento, marcar que ya no está moviéndose
-    const animationDuration = 300; // Duración de la animación en ms
+    const animationDuration = 150; // Duración de la animación en ms (ajustada para coincidir con la velocidad de movimiento)
     const timer = setTimeout(() => {
       setIsMoving(false);
     }, animationDuration);
@@ -103,8 +103,8 @@ const Character = forwardRef(({ position, visible = true, direction = 'left' }, 
     backgroundPosition: 'center',
     transform: `${bounce}`,
     zIndex: 10,
-    // Transición suave para el movimiento entre casillas
-    transition: 'left 0.3s ease-in-out, top 0.3s ease-in-out, transform 0.2s',
+    // Transición suave para el movimiento entre casillas (ajustada a la nueva velocidad)
+    transition: 'left 0.15s ease-in-out, top 0.15s ease-in-out, transform 0.15s',
     filter: isMoving ? 'brightness(1.3) drop-shadow(0 0 5px rgba(255, 255, 255, 0.7))' : 'brightness(1.1) drop-shadow(0 0 3px rgba(255, 255, 255, 0.5))', // Efecto de brillo mejorado
     imageRendering: 'pixelated' // Mantener el aspecto pixelado al hacer zoom
   };
