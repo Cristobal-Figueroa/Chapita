@@ -146,13 +146,73 @@ const Game = () => {
           
           // Si el jugador ya existía, preservar algunos datos para transiciones suaves
           if (prevPlayerData) {
-            updatedPlayers[playerId] = {
-              ...newPlayerData,
-              // Mantener el estado isMoving actualizado basado en si la posición cambió
-              isMoving: newPlayerData.isMoving || 
-                (prevPlayerData.position.x !== newPlayerData.position.x || 
-                 prevPlayerData.position.y !== newPlayerData.position.y)
-            };
+            // Detectar si la posición ha cambiado
+            const positionChanged = 
+              prevPlayerData.position.x !== newPlayerData.position.x || 
+              prevPlayerData.position.y !== newPlayerData.position.y;
+            
+            // Si la posición cambió, marcar como en movimiento por un tiempo
+            let isMovingNow = newPlayerData.isMoving;
+            
+            if (positionChanged) {
+              isMovingNow = true;
+              
+              // Si el jugador acaba de moverse, guardar su última dirección de movimiento
+              let detectedDirection = prevPlayerData.lastDirection || 'down';
+              
+              if (newPlayerData.position.x > prevPlayerData.position.x) {
+                detectedDirection = 'right';
+              } else if (newPlayerData.position.x < prevPlayerData.position.x) {
+                detectedDirection = 'left';
+              } else if (newPlayerData.position.y > prevPlayerData.position.y) {
+                detectedDirection = 'down';
+              } else if (newPlayerData.position.y < prevPlayerData.position.y) {
+                detectedDirection = 'up';
+              }
+              
+              // Mantener el estado de movimiento activo por un tiempo
+              // para permitir que la animación se complete
+              if (isMovingNow) {
+                // Cancelar cualquier temporizador anterior
+                if (prevPlayerData.moveTimer) {
+                  clearTimeout(prevPlayerData.moveTimer);
+                }
+                
+                // Crear un nuevo temporizador para desactivar el movimiento
+                const moveTimer = setTimeout(() => {
+                  setOnlinePlayers(current => {
+                    if (!current[playerId]) return current;
+                    return {
+                      ...current,
+                      [playerId]: {
+                        ...current[playerId],
+                        isMoving: false
+                      }
+                    };
+                  });
+                }, 500); // Mantener el estado de movimiento por 500ms
+                
+                updatedPlayers[playerId] = {
+                  ...newPlayerData,
+                  isMoving: true, // Forzar a true para asegurar la animación
+                  lastDirection: detectedDirection,
+                  moveTimer // Guardar referencia al temporizador
+                };
+              } else {
+                updatedPlayers[playerId] = {
+                  ...newPlayerData,
+                  isMoving: isMovingNow,
+                  lastDirection: detectedDirection
+                };
+              }
+            } else {
+              // Si no ha cambiado la posición, mantener los datos actuales
+              updatedPlayers[playerId] = {
+                ...newPlayerData,
+                isMoving: isMovingNow,
+                lastDirection: newPlayerData.lastDirection || prevPlayerData.lastDirection
+              };
+            }
           } else {
             // Nuevo jugador, usar datos tal cual
             updatedPlayers[playerId] = newPlayerData;

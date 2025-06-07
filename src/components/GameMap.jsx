@@ -1,5 +1,6 @@
 import React from 'react';
 import { map1, TILE_SIZE } from '../assets/maps/map1';
+import grassTexture from '../assets/sprites/gras.jpg';
 
 const GameMap = () => {
   // Función para determinar el color base de cada tipo de celda
@@ -46,13 +47,11 @@ const GameMap = () => {
     
     // Estilos específicos según el tipo de celda
     switch (tileType) {
-      case 0: // Hierba
+      case 0: // Hierba - ahora transparente para mostrar la textura de fondo
         return {
           ...baseStyle,
-          backgroundColor: baseColor,
-          backgroundImage: isEvenCell ? 
-            'radial-gradient(circle at 30% 30%, #5ca336 5%, transparent 5%)' : 
-            'radial-gradient(circle at 70% 70%, #5ca336 5%, transparent 5%)',
+          backgroundColor: 'transparent',
+          // Sin background-image para dejar ver la textura de fondo
         };
       
       case 1: // Árbol individual
@@ -167,9 +166,9 @@ const GameMap = () => {
         width: `${map1[0].length * TILE_SIZE}px`,
         height: `${map1.length * TILE_SIZE}px`,
         overflow: 'hidden',
-        backgroundColor: '#4a8f29', // Color base del bosque
-        backgroundImage: 'radial-gradient(#5ca336 15%, transparent 15%)',
-        backgroundSize: '12px 12px',
+        backgroundImage: `url(${grassTexture})`,
+        backgroundRepeat: 'repeat',
+        backgroundSize: '64px 64px', // Ajusta el tamaño según necesites
       }}
     >
       {/* Renderizar cada celda del mapa */}

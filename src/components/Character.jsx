@@ -128,8 +128,49 @@ const Character = forwardRef(({
     }
   }, [position, visualPosition, isOtherPlayer]);
   
-  // Determinar si el personaje está en movimiento basado en props o estado interno
-  const effectiveIsMoving = isOtherPlayer ? isMoving || isMovingState : isMovingState;
+  // Para jugadores locales, usar el estado de movimiento interno
+  // Para otros jugadores, detectar cambios de posición para mostrar sprite de movimiento
+  const [lastPosition, setLastPosition] = useState(null);
+  const [otherPlayerMoving, setOtherPlayerMoving] = useState(false);
+  
+  // Inicializar lastPosition al montar el componente
+  useEffect(() => {
+    if (position) {
+      setLastPosition({ x: position.x, y: position.y });
+    }
+  }, []); // Solo se ejecuta al montar
+  
+  // Detectar cambios de posición para otros jugadores
+  useEffect(() => {
+    if (!isOtherPlayer || !lastPosition) return;
+    
+    // Si la posición cambió, activar el sprite de movimiento
+    if (lastPosition.x !== position.x || lastPosition.y !== position.y) {
+      console.log('Otro jugador se movió de', lastPosition, 'a', position);
+      
+      // Determinar la dirección del movimiento
+      let moveDirection = lastDirection;
+      if (position.x > lastPosition.x) moveDirection = 'right';
+      else if (position.x < lastPosition.x) moveDirection = 'left';
+      else if (position.y > lastPosition.y) moveDirection = 'down';
+      else if (position.y < lastPosition.y) moveDirection = 'up';
+      
+      // Forzar el sprite de movimiento
+      setOtherPlayerMoving(true);
+      
+      // Guardar la nueva posición
+      setLastPosition({ x: position.x, y: position.y });
+      
+      // Desactivar el sprite de movimiento después de un tiempo
+      const timer = setTimeout(() => {
+        setOtherPlayerMoving(false);
+      }, 800); // Mostrar sprite de movimiento por 800ms
+      
+      return () => clearTimeout(timer);
+    }
+  }, [isOtherPlayer, position, lastPosition, lastDirection]);
+  
+  const effectiveIsMoving = isOtherPlayer ? otherPlayerMoving : isMovingState;
   
   // Efecto separado para manejar cambios de dirección
   useEffect(() => {
@@ -187,27 +228,49 @@ const Character = forwardRef(({
   // Si no está en reposo, verificamos si está en movimiento
   else if (effectiveIsMoving) {
     // Está en movimiento activo (cambiando de posición)
-    console.log('ESTADO: MOVIMIENTO - Dirección: ' + direction.toUpperCase());
-    if (direction === 'right') {
-      // Para movimiento a la derecha, usar sprite según el contador de movimientos
-      if (moveCount <= 1) {
-        currentSprite = dazRightSprite; // Primer movimiento a la derecha (girar)
+    const actualDirection = isOtherPlayer ? lastDirection : direction;
+    console.log('ESTADO: MOVIMIENTO - Dirección: ' + actualDirection.toUpperCase() + (isOtherPlayer ? ' (otro jugador)' : ''));
+    
+    // FORZAR SPRITE DE MOVIMIENTO PARA OTROS JUGADORES
+    if (isOtherPlayer) {
+      // Seleccionar sprite según dirección para otros jugadores
+      if (actualDirection === 'right') {
+        currentSprite = dazRunRightSprite; // Correr a la derecha
+        console.log('FORZANDO sprite de correr a la derecha para otro jugador');
+      } else if (actualDirection === 'left') {
+        currentSprite = dazSprite; // Correr a la izquierda
+        console.log('FORZANDO sprite de correr a la izquierda para otro jugador');
+      } else if (actualDirection === 'down') {
+        currentSprite = dazStandSprite; // Movimiento hacia abajo
+        console.log('FORZANDO sprite hacia abajo para otro jugador');
       } else {
-        currentSprite = dazRunRightSprite; // Movimientos continuos a la derecha (correr)
+        currentSprite = dazSprite; // Movimiento hacia arriba u otra dirección
+        console.log('FORZANDO sprite hacia arriba para otro jugador');
       }
-    } else if (direction === 'left') {
-      // Para movimiento a la izquierda
-      if (moveCount <= 1) {
-        currentSprite = dazLeftSprite; // Primer movimiento a la izquierda
+    }
+    // Lógica normal para el jugador local
+    else {
+      if (actualDirection === 'right') {
+        // Para movimiento a la derecha, usar sprite según el contador de movimientos
+        if (moveCount > 1) {
+          currentSprite = dazRunRightSprite; // Movimientos continuos a la derecha (correr)
+        } else {
+          currentSprite = dazRightSprite; // Primer movimiento a la derecha (girar)
+        }
+      } else if (actualDirection === 'left') {
+        // Para movimiento a la izquierda
+        if (moveCount > 1) {
+          currentSprite = dazSprite; // Movimientos continuos a la izquierda
+        } else {
+          currentSprite = dazLeftSprite; // Primer movimiento a la izquierda
+        }
+      } else if (actualDirection === 'down') {
+        // Para movimiento hacia abajo usar el sprite de stand
+        currentSprite = dazStandSprite;
       } else {
-        currentSprite = dazSprite; // Movimientos continuos a la izquierda
+        // Para otras direcciones usar el sprite normal
+        currentSprite = dazSprite;
       }
-    } else if (direction === 'down') {
-      // Para movimiento hacia abajo usar el sprite de stand
-      currentSprite = dazStandSprite;
-    } else {
-      // Para otras direcciones usar el sprite normal
-      currentSprite = dazSprite;
     }
   } 
   // Si no está en reposo ni en movimiento, está quieto
