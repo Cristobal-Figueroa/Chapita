@@ -38,4 +38,4 @@ export const map1 = [
 ];
 
 // Tamaño de cada celda del mapa en píxeles
-export const TILE_SIZE = 96; // Aumentado de 64 a 96 para hacer más zoom
+export const TILE_SIZE = 64; // Reducido a 64 para hacer los cuadrados más pequeños

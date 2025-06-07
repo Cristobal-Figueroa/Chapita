@@ -83,15 +83,22 @@ const Character = forwardRef(({ position, visible = true, direction = 'left' }, 
     }
   }
   
+  // Constante para el tamaño del personaje (mantener el tamaño anterior aunque los tiles sean más pequeños)
+  const CHARACTER_SIZE = 96; // El tamaño anterior de los tiles
+  
+  // Calcular el desplazamiento para centrar el personaje en el tile
+  const offsetX = (TILE_SIZE - CHARACTER_SIZE) / 2;
+  const offsetY = (TILE_SIZE - CHARACTER_SIZE) / 2;
+  
   // Estilo para el personaje
   const characterStyle = {
     position: 'absolute',
-    left: `${visualPosition.x * TILE_SIZE}px`,
-    top: `${visualPosition.y * TILE_SIZE}px`,
-    width: `${TILE_SIZE}px`,
-    height: `${TILE_SIZE}px`,
+    left: `${visualPosition.x * TILE_SIZE + offsetX}px`,
+    top: `${visualPosition.y * TILE_SIZE + offsetY}px`,
+    width: `${CHARACTER_SIZE}px`,
+    height: `${CHARACTER_SIZE}px`,
     backgroundImage: `url(${currentSprite})`,
-    backgroundSize: 'contain', // Mantener el tamaño original del PNG
+    backgroundSize: 'contain',
     backgroundRepeat: 'no-repeat',
     backgroundPosition: 'center',
     transform: `${bounce}`,
