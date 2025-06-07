@@ -28,13 +28,15 @@ const Character = forwardRef(({ position, visible = true, direction = 'left' }, 
       setLastDirection(direction);
     }
     
-    // Actualizar la posición visual inmediatamente
+    // Actualizar la posición visual gradualmente
+    // Esto creará una animación suave entre la posición anterior y la nueva
+    setVisualPosition({ x: position.x, y: position.y });
+    
+    // Después de completar el movimiento, marcar que ya no está moviéndose
+    const animationDuration = 300; // Duración de la animación en ms
     const timer = setTimeout(() => {
-      setVisualPosition({ x: position.x, y: position.y });
-      
-      // Después de completar el movimiento, marcar que ya no está moviéndose
-      setTimeout(() => setIsMoving(false), 200);
-    }, 10); // Demora mínima
+      setIsMoving(false);
+    }, animationDuration);
     
     return () => clearTimeout(timer);
   }, [position, direction]);
@@ -94,8 +96,8 @@ const Character = forwardRef(({ position, visible = true, direction = 'left' }, 
     backgroundPosition: 'center',
     transform: `${bounce}`,
     zIndex: 10,
-    // Solo transición para el efecto de rebote
-    transition: 'transform 0.2s',
+    // Transición suave para el movimiento entre casillas
+    transition: 'left 0.3s ease-in-out, top 0.3s ease-in-out, transform 0.2s',
     filter: isMoving ? 'brightness(1.3) drop-shadow(0 0 5px rgba(255, 255, 255, 0.7))' : 'brightness(1.1) drop-shadow(0 0 3px rgba(255, 255, 255, 0.5))', // Efecto de brillo mejorado
     imageRendering: 'pixelated' // Mantener el aspecto pixelado al hacer zoom
   };
