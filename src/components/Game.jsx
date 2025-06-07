@@ -13,6 +13,9 @@ const Game = () => {
   // Estado para la dirección del personaje (izquierda o derecha)
   const [direction, setDirection] = useState('left');
   
+  // Estado para almacenar la última dirección presionada
+  const [lastDirection, setLastDirection] = useState(null);
+  
   // Referencia para el contenedor del juego para mantener el foco
   const gameContainerRef = useRef(null);
 
@@ -41,32 +44,46 @@ const Game = () => {
     let newX = position.x;
     let newY = position.y;
     let newDirection = direction;
+    let currentKey = '';
 
     switch (event.key) {
       case 'ArrowUp':
         newY -= 1;
+        newDirection = 'up';
+        currentKey = 'up';
         break;
       case 'ArrowDown':
         newY += 1;
+        newDirection = 'down';
+        currentKey = 'down';
         break;
       case 'ArrowLeft':
         newX -= 1;
-        newDirection = 'left'; // Actualizar dirección a izquierda
+        newDirection = 'left';
+        currentKey = 'left';
         break;
       case 'ArrowRight':
         newX += 1;
-        newDirection = 'right'; // Actualizar dirección a derecha
+        newDirection = 'right';
+        currentKey = 'right';
         break;
       default:
         return; // Ignorar otras teclas
     }
 
-    // Actualizar la dirección del personaje
+    // Actualizar la dirección del personaje siempre
     setDirection(newDirection);
 
-    // Actualizar la posición solo si es válida
-    if (isValidPosition(newX, newY)) {
-      setPosition({ x: newX, y: newY });
+    // Verificar si es la misma dirección que la última vez
+    if (currentKey === lastDirection) {
+      // Si ya estaba en esta dirección, mover al personaje
+      if (isValidPosition(newX, newY)) {
+        setPosition({ x: newX, y: newY });
+      }
+    } else {
+      // Si es una nueva dirección, solo actualizar la dirección sin mover
+      setLastDirection(currentKey);
+      // No actualizar la posición, solo girar
     }
   };
 
@@ -85,7 +102,7 @@ const Game = () => {
     return () => {
       window.removeEventListener('keydown', handleKeyDown);
     };
-  }, [position, gameStarted, direction]); // Dependencias: position, gameStarted y direction
+  }, [position, gameStarted, direction, lastDirection]); // Incluir todas las dependencias necesarias
 
   // Referencia para el personaje
   const characterRef = useRef(null);
