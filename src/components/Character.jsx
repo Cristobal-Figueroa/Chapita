@@ -6,51 +6,123 @@ import dazStandSprite from '../assets/sprites/daz-stand.png'; // Sprite para cua
 import dazLeftSprite from '../assets/sprites/daz-left.png'; // Sprite para girar a la izquierda
 import { TILE_SIZE } from '../assets/maps/map1';
 
-const Character = forwardRef(({ position, visible = true, direction = 'left' }, ref) => {
+const Character = forwardRef(({ position, visible = true, direction = 'left', isKeyPressed = false }, ref) => {
   // Estados para la posición visual del personaje (para animaciones suaves)
   const [visualPosition, setVisualPosition] = useState({ x: position.x, y: position.y });
   const [isMoving, setIsMoving] = useState(false);
   const [lastDirection, setLastDirection] = useState(direction); // Guardar la última dirección
   const [moveCount, setMoveCount] = useState(0); // Contador de movimientos en la misma dirección
+  const [idleTimer, setIdleTimer] = useState(null); // Temporizador para el estado de reposo
+  const [isIdle, setIsIdle] = useState(false); // Estado de reposo (cuando no se presionan teclas por un tiempo)
   
-  // Actualizar la posición visual cuando cambia la posición real
+  // Efecto para manejar cuando el usuario presiona o suelta las teclas
   useEffect(() => {
-    // Marcar que el personaje está en movimiento
-    setIsMoving(true);
+    // Función para limpiar el temporizador
+    const clearIdleTimerFn = () => {
+      if (idleTimer) {
+        clearTimeout(idleTimer);
+        setIdleTimer(null);
+      }
+    };
     
-    // Comprobar si sigue moviéndose en la misma dirección
-    if (direction === lastDirection) {
-      // Incrementar el contador de movimientos en la misma dirección
-      setMoveCount(prevCount => prevCount + 1);
+    if (isKeyPressed) {
+      // Si se está presionando una tecla, no está en reposo
+      if (isIdle) {
+        setIsIdle(false);
+      }
+      
+      // Limpiar cualquier temporizador de inactividad existente
+      clearIdleTimerFn();
     } else {
-      // Si cambió de dirección, reiniciar el contador
-      setMoveCount(1);
-      setLastDirection(direction);
+      // Si no se está presionando ninguna tecla, iniciar temporizador para reposo
+      if (!idleTimer && !isIdle) {
+        console.log('Teclas liberadas, iniciando temporizador de reposo');
+        const timer = setTimeout(() => {
+          console.log('1.6 segundos sin presionar teclas, cambiando a reposo');
+          setIsIdle(true);
+        }, 1600); // 1.6 segundos
+        setIdleTimer(timer);
+      }
     }
     
-    // Actualizar la posición visual gradualmente
-    // Esto creará una animación suave entre la posición anterior y la nueva
-    setVisualPosition({ x: position.x, y: position.y });
+    // Limpiar el temporizador cuando el componente se desmonte
+    return clearIdleTimerFn;
+  }, [isKeyPressed, idleTimer, isIdle]);
+
+  // Actualizar la posición visual cuando cambia la posición real
+  useEffect(() => {
+    // Detectar si la posición ha cambiado realmente
+    const positionChanged = visualPosition.x !== position.x || visualPosition.y !== position.y;
     
-    // Después de completar el movimiento, marcar que ya no está moviéndose
-    const animationDuration = 150; // Duración de la animación en ms (ajustada para coincidir con la velocidad de movimiento)
-    const timer = setTimeout(() => {
-      setIsMoving(false);
-    }, animationDuration);
-    
-    return () => clearTimeout(timer);
-  }, [position, direction]);
+    if (positionChanged) {
+      // Marcar que el personaje está en movimiento
+      setIsMoving(true);
+      
+      // Si se está moviendo, no está en reposo
+      if (isIdle) {
+        setIsIdle(false);
+      }
+      
+      // Limpiar cualquier temporizador de inactividad existente
+      if (idleTimer) {
+        clearTimeout(idleTimer);
+        setIdleTimer(null);
+      }
+      
+      // Comprobar si sigue moviéndose en la misma dirección
+      if (direction === lastDirection) {
+        // Incrementar el contador de movimientos en la misma dirección
+        setMoveCount(prevCount => prevCount + 1);
+      } else {
+        // Si cambió de dirección, reiniciar el contador
+        setMoveCount(1);
+        setLastDirection(direction);
+      }
+      
+      // Actualizar la posición visual gradualmente
+      setVisualPosition({ x: position.x, y: position.y });
+      
+      // Después de completar el movimiento, marcar que ya no está moviéndose
+      const animationDuration = 150; // Duración de la animación en ms
+      const timer = setTimeout(() => {
+        setIsMoving(false);
+      }, animationDuration);
+      
+      return () => clearTimeout(timer);
+    }
+  }, [position, direction, visualPosition, lastDirection, idleTimer, isIdle]);
+  
+  // Limpiar temporizadores cuando el componente se desmonta
+  useEffect(() => {
+    return () => {
+      if (idleTimer) {
+        clearTimeout(idleTimer);
+      }
+    };
+  }, []);
   
   if (!visible) return null;
   
   // Calcular un ligero rebote para la animación de movimiento
   const bounce = isMoving ? 'translateY(-5px)' : 'translateY(0)'; 
   
-  // Seleccionar el sprite adecuado según la dirección, estado de movimiento y contador de movimientos
+  // Seleccionar el sprite adecuado según la dirección, estado de movimiento, contador de movimientos y estado de inactividad
   let currentSprite;
   
-  if (!isMoving) {
-    // Si está quieto, usar el sprite de reposo según la última dirección
+  if (isIdle) {
+    // Si está en estado de inactividad (1.6 segundos sin presionar teclas)
+    console.log('Mostrando sprite de reposo por inactividad');
+    // El sprite de reposo debe ser el que mira hacia la última dirección
+    if (lastDirection === 'right') {
+      currentSprite = dazRightSprite; // Reposo mirando a la derecha
+    } else if (lastDirection === 'left') {
+      currentSprite = dazLeftSprite; // Reposo mirando a la izquierda
+    } else {
+      currentSprite = dazStandSprite; // Reposo mirando abajo por defecto
+    }
+  } else if (!isMoving) {
+    // Si está quieto pero no inactivo, usar el sprite estático según la última dirección
+    console.log('Mostrando sprite estático según dirección: ' + lastDirection);
     if (lastDirection === 'right') {
       currentSprite = dazRightSprite; // Quieto mirando a la derecha
     } else if (lastDirection === 'left') {
@@ -60,6 +132,7 @@ const Character = forwardRef(({ position, visible = true, direction = 'left' }, 
     }
   } else {
     // Si está en movimiento
+    console.log('Mostrando sprite de movimiento');
     if (direction === 'right') {
       // Para movimiento a la derecha, usar sprite según el contador de movimientos
       if (moveCount <= 1) {

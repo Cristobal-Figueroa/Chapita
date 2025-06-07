@@ -19,6 +19,9 @@ const Game = () => {
   // Estado para controlar el cooldown entre movimientos
   const [canMove, setCanMove] = useState(true);
   
+  // Estado para detectar si hay alguna tecla de movimiento presionada actualmente
+  const [isKeyPressed, setIsKeyPressed] = useState(false);
+  
   // Constante para la velocidad de movimiento (en ms)
   const MOVEMENT_SPEED = 150; // 150ms entre movimientos (más rápido)
   
@@ -37,18 +40,13 @@ const Game = () => {
     return ![1, 2, 3, 7].includes(tileType);
   };
 
-  // Manejar el movimiento del personaje con las teclas de flecha
+  // Manejar cuando se presiona una tecla
   const handleKeyDown = (event) => {
     // Si el juego no ha comenzado, solo responder a Enter
     if (!gameStarted) {
       if (event.key === 'Enter') {
         setGameStarted(true);
       }
-      return;
-    }
-    
-    // Si el personaje está en cooldown, ignorar la tecla
-    if (!canMove) {
       return;
     }
     
@@ -63,21 +61,25 @@ const Game = () => {
         newY -= 1;
         newDirection = 'up';
         currentKey = 'up';
+        setIsKeyPressed(true); // Marcar que una tecla de movimiento está presionada
         break;
       case 'ArrowDown':
         newY += 1;
         newDirection = 'down';
         currentKey = 'down';
+        setIsKeyPressed(true);
         break;
       case 'ArrowLeft':
         newX -= 1;
         newDirection = 'left';
         currentKey = 'left';
+        setIsKeyPressed(true);
         break;
       case 'ArrowRight':
         newX += 1;
         newDirection = 'right';
         currentKey = 'right';
+        setIsKeyPressed(true);
         break;
       default:
         return; // Ignorar otras teclas
@@ -85,6 +87,19 @@ const Game = () => {
 
     // Actualizar la dirección del personaje siempre
     setDirection(newDirection);
+
+    // Incluso si el personaje está en cooldown, siempre actualizamos la dirección
+    // para que gire inmediatamente al presionar una tecla
+    
+    // Si el personaje está en cooldown, no realizar el movimiento completo
+    // pero sí permitir el cambio de dirección
+    if (!canMove) {
+      // Si es una nueva dirección, actualizar la última dirección
+      if (currentKey !== lastDirection) {
+        setLastDirection(currentKey);
+      }
+      return;
+    }
 
     // Verificar si es la misma dirección que la última vez
     if (currentKey === lastDirection) {
@@ -113,6 +128,15 @@ const Game = () => {
     }
   };
 
+  // Manejar cuando se suelta una tecla
+  const handleKeyUp = (event) => {
+    // Verificar si es una tecla de movimiento
+    if (['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight'].includes(event.key)) {
+      console.log('Tecla de movimiento liberada');
+      setIsKeyPressed(false);
+    }
+  };
+
   // Mantener el foco en el contenedor del juego
   useEffect(() => {
     if (gameContainerRef.current) {
@@ -120,13 +144,15 @@ const Game = () => {
     }
   }, [gameStarted]);
 
-  // Agregar event listener para las teclas
+  // Agregar event listeners para las teclas
   useEffect(() => {
     window.addEventListener('keydown', handleKeyDown);
+    window.addEventListener('keyup', handleKeyUp);
     
-    // Limpiar el event listener cuando el componente se desmonte
+    // Limpiar los event listeners cuando el componente se desmonte
     return () => {
       window.removeEventListener('keydown', handleKeyDown);
+      window.removeEventListener('keyup', handleKeyUp);
     };
   }, [position, gameStarted, direction, lastDirection, canMove]); // Incluir todas las dependencias necesarias
 
@@ -224,6 +250,7 @@ const Game = () => {
             position={position} 
             visible={gameStarted} 
             direction={direction}
+            isKeyPressed={isKeyPressed}
             ref={characterRef}
           />
         </div>
