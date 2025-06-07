@@ -230,7 +230,7 @@ const Character = forwardRef(({
         <div className="character-name" style={{
           position: 'absolute',
           top: `-${20 + (SPRITE_SCALE - 1) * 8}px`, // Posición más arriba del sprite
-          left: '40%', // Ligeramente a la izquierda
+          left: '30%', // Más a la izquierda
           width: '60px', // Aún más pequeño
           textAlign: 'center',
           transform: 'translateX(-50%)', // Mantener centrado relativo a su posición
