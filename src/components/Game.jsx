@@ -16,6 +16,12 @@ const Game = () => {
   // Estado para almacenar la última dirección presionada
   const [lastDirection, setLastDirection] = useState(null);
   
+  // Estado para controlar el cooldown entre movimientos
+  const [canMove, setCanMove] = useState(true);
+  
+  // Constante para la velocidad de movimiento (en ms)
+  const MOVEMENT_SPEED = 200; // 200ms entre movimientos
+  
   // Referencia para el contenedor del juego para mantener el foco
   const gameContainerRef = useRef(null);
 
@@ -33,7 +39,7 @@ const Game = () => {
 
   // Manejar el movimiento del personaje con las teclas de flecha
   const handleKeyDown = (event) => {
-    // Si el juego no ha comenzado, verificar si se presionó Enter
+    // Si el juego no ha comenzado, solo responder a Enter
     if (!gameStarted) {
       if (event.key === 'Enter') {
         setGameStarted(true);
@@ -41,11 +47,17 @@ const Game = () => {
       return;
     }
     
+    // Si el personaje está en cooldown, ignorar la tecla
+    if (!canMove) {
+      return;
+    }
+    
     let newX = position.x;
     let newY = position.y;
     let newDirection = direction;
-    let currentKey = '';
-
+    let currentKey = null;
+    
+    // Determinar la nueva posición basada en la tecla presionada
     switch (event.key) {
       case 'ArrowUp':
         newY -= 1;
@@ -79,11 +91,25 @@ const Game = () => {
       // Si ya estaba en esta dirección, mover al personaje
       if (isValidPosition(newX, newY)) {
         setPosition({ x: newX, y: newY });
+        
+        // Activar el cooldown
+        setCanMove(false);
+        
+        // Reactivar el movimiento después del tiempo definido
+        setTimeout(() => {
+          setCanMove(true);
+        }, MOVEMENT_SPEED);
       }
     } else {
       // Si es una nueva dirección, solo actualizar la dirección sin mover
       setLastDirection(currentKey);
       // No actualizar la posición, solo girar
+      
+      // Activar un cooldown más corto para el giro
+      setCanMove(false);
+      setTimeout(() => {
+        setCanMove(true);
+      }, MOVEMENT_SPEED / 2); // El giro es más rápido que el movimiento
     }
   };
 
@@ -102,7 +128,7 @@ const Game = () => {
     return () => {
       window.removeEventListener('keydown', handleKeyDown);
     };
-  }, [position, gameStarted, direction, lastDirection]); // Incluir todas las dependencias necesarias
+  }, [position, gameStarted, direction, lastDirection, canMove]); // Incluir todas las dependencias necesarias
 
   // Referencia para el personaje
   const characterRef = useRef(null);
