@@ -229,21 +229,29 @@ const Character = forwardRef(({
       {username && (
         <div className="character-name" style={{
           position: 'absolute',
-          top: `-${20 + (SPRITE_SCALE - 1) * 10}px`, // Ajustar la posición del nombre según el tamaño del sprite
-          width: '100px',
+          top: `-${20 + (SPRITE_SCALE - 1) * 8}px`, // Posición más arriba del sprite
+          left: '40%', // Ligeramente a la izquierda
+          width: '60px', // Aún más pequeño
           textAlign: 'center',
-          transform: 'translateX(-25%)',
-          backgroundColor: isOtherPlayer ? playerColor : '#4CAF50',
+          transform: 'translateX(-50%)', // Mantener centrado relativo a su posición
+          backgroundColor: isOtherPlayer ? 
+            `${playerColor}dd` : // Color semi-transparente para otros jugadores
+            'rgba(76, 175, 80, 0.85)', // Verde semi-transparente para el jugador principal
           color: 'white',
-          padding: '2px 5px',
-          borderRadius: '3px',
-          fontSize: '12px',
+          padding: '1px 3px', // Padding más pequeño
+          borderRadius: '6px', // Bordes menos redondeados
+          fontSize: '9px', // Fuente aún más pequeña
           fontWeight: 'bold',
+          letterSpacing: '0.2px',
           whiteSpace: 'nowrap',
           overflow: 'hidden',
           textOverflow: 'ellipsis',
-          boxShadow: '0 1px 3px rgba(0, 0, 0, 0.3)',
-          zIndex: 20
+          boxShadow: '0 1px 2px rgba(0, 0, 0, 0.3), 0 0 4px rgba(255, 255, 255, 0.15) inset',
+          border: '1px solid rgba(255, 255, 255, 0.25)',
+          textShadow: '0px 1px 1px rgba(0, 0, 0, 0.7)',
+          zIndex: 20,
+          backdropFilter: 'blur(1px)',
+          transition: 'all 0.3s ease'
         }}>
           {username}
         </div>
