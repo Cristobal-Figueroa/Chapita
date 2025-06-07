@@ -37,6 +37,9 @@ const Game = () => {
   // Estado para la posición de la cámara
   const [cameraPosition, setCameraPosition] = useState({ x: 0, y: 0 });
   
+  // Factor de zoom para acercar la cámara
+  const ZOOM_FACTOR = 1.5; // Aumentar este valor para acercar más
+  
   // Constante para la velocidad de movimiento (en ms)
   const MOVEMENT_SPEED = 150; // 150ms entre movimientos (más rápido)
   
@@ -323,17 +326,10 @@ const Game = () => {
       const viewportWidth = viewportRef.current.clientWidth;
       const viewportHeight = viewportRef.current.clientHeight;
       
-      // Calcular las dimensiones totales del mapa
-      const mapWidth = map1[0].length * TILE_SIZE;
-      const mapHeight = map1.length * TILE_SIZE;
-      
-      // Calcular la posición de desplazamiento para centrar al personaje
-      let scrollX = characterX - viewportWidth / 2;
-      let scrollY = characterY - viewportHeight / 2;
-      
-      // Ajustar los límites para que no se muestre espacio vacío en los bordes
-      scrollX = Math.max(0, Math.min(scrollX, mapWidth - viewportWidth));
-      scrollY = Math.max(0, Math.min(scrollY, mapHeight - viewportHeight));
+      // Siempre centrar la cámara en el personaje, sin importar los bordes del mapa
+      // Esto mantiene al personaje en el centro de la pantalla en todo momento
+      const scrollX = characterX - viewportWidth / 2;
+      const scrollY = characterY - viewportHeight / 2;
       
       // Actualizar la posición de la cámara
       setCameraPosition({ x: scrollX, y: scrollY });
@@ -504,8 +500,9 @@ const Game = () => {
           className="game-world"
           style={{
             position: 'absolute',
-            transform: `translate(${-cameraPosition.x}px, ${-cameraPosition.y}px)`,
-            transition: 'transform 0.2s ease-out'
+            transform: `translate(${-cameraPosition.x}px, ${-cameraPosition.y}px) scale(${ZOOM_FACTOR})`,
+            transition: 'transform 0.2s ease-out',
+            transformOrigin: 'center center'
           }}
         >
           <GameMap map={map1} />
