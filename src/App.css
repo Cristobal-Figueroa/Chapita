@@ -1,0 +1,99 @@
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  font-family: 'Press Start 2P', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Arial, sans-serif;
+  background-color: #282c34;
+  color: white;
+}
+
+#root {
+  max-width: 1280px;
+  margin: 0 auto;
+  padding: 1rem;
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.app-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 100%;
+}
+
+.app-container h1 {
+  margin-bottom: 2rem;
+  font-size: 2rem;
+  color: #FFD700;
+  text-shadow: 3px 3px 0px #000;
+}
+
+.game-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  background-color: #1a1c22;
+  border-radius: 8px;
+  padding: 1.5rem;
+  box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
+  max-width: 100%;
+  overflow: auto;
+}
+
+.game-board {
+  position: relative;
+  border: 6px solid #333;
+  margin: 1.5rem 0;
+  overflow: hidden;
+  outline: none;
+  box-shadow: 0 0 20px rgba(0, 0, 0, 0.7);
+}
+
+.game-instructions {
+  margin-top: 1rem;
+  font-size: 0.8rem;
+  color: #AAA;
+}
+
+/* Estilo para píxeles */
+.game-board div div {
+  image-rendering: pixelated;
+  image-rendering: crisp-edges;
+}
+
+/* Pantalla de inicio */
+.start-screen {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  background-color: rgba(0, 0, 0, 0.7);
+  z-index: 5;
+}
+
+.start-screen p {
+  color: #FFD700;
+  font-size: 1.5rem;
+  text-shadow: 3px 3px 6px #000;
+  animation: pulse 1.5s infinite;
+  padding: 15px;
+  background-color: rgba(0, 0, 0, 0.5);
+  border-radius: 8px;
+  border: 2px solid #FFD700;
+}
+
+@keyframes pulse {
+  0% { transform: scale(1); }
+  50% { transform: scale(1.1); }
+  100% { transform: scale(1); }
+}
