@@ -14,8 +14,8 @@ const Game = () => {
   const { currentUser, logout, getUserData, updateUserData } = useAuth();
   const navigate = useNavigate();
   
-  // Estado para controlar si el juego ha comenzado
-  const [gameStarted, setGameStarted] = useState(false);
+  // Estado para controlar si el juego ha comenzado (ahora inicia automáticamente)
+  const [gameStarted, setGameStarted] = useState(true);
   
   // Estado para los jugadores online
   const [onlinePlayers, setOnlinePlayers] = useState({});
@@ -372,8 +372,8 @@ const Game = () => {
       return;
     }
     
-    // Manejar la tecla Y para activar/desactivar el chat
-    if (event.key === 'y' || event.key === 'Y') {
+    // Manejar la tecla Enter para activar/desactivar el chat
+    if (event.key === 'Enter') {
       if (isChatting) {
         // Si ya estaba chateando, enviar el mensaje y salir del modo chat
         if (chatInputValue.trim()) {
@@ -400,26 +400,30 @@ const Game = () => {
     let currentKey = null;
     
     // Determinar la nueva posición basada en la tecla presionada
-    switch (event.key) {
-      case 'ArrowUp':
+    switch (event.key.toLowerCase()) {
+      case 'w':
+      case 'arrowup': // Mantener compatibilidad con flechas
         newY -= 1;
         newDirection = 'up';
         currentKey = 'up';
         setIsKeyPressed(true); // Marcar que una tecla de movimiento está presionada
         break;
-      case 'ArrowDown':
+      case 's':
+      case 'arrowdown': // Mantener compatibilidad con flechas
         newY += 1;
         newDirection = 'down';
         currentKey = 'down';
         setIsKeyPressed(true);
         break;
-      case 'ArrowLeft':
+      case 'a':
+      case 'arrowleft': // Mantener compatibilidad con flechas
         newX -= 1;
         newDirection = 'left';
         currentKey = 'left';
         setIsKeyPressed(true);
         break;
-      case 'ArrowRight':
+      case 'd':
+      case 'arrowright': // Mantener compatibilidad con flechas
         newX += 1;
         newDirection = 'right';
         currentKey = 'right';
@@ -500,8 +504,8 @@ const Game = () => {
 
   // Manejar cuando se suelta una tecla
   const handleKeyUp = (event) => {
-    // Verificar si es una tecla de movimiento
-    if (['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight'].includes(event.key)) {
+    // Verificar si es una tecla de movimiento (WASD o flechas)
+    if (['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight', 'w', 'a', 's', 'd', 'W', 'A', 'S', 'D'].includes(event.key)) {
       console.log('Tecla de movimiento liberada');
       setIsKeyPressed(false);
     }
@@ -805,9 +809,7 @@ const Game = () => {
           />
         </div>
         <p>
-          {gameStarted 
-            ? "Usa las flechas del teclado para mover al personaje" 
-            : "Presiona ENTER para comenzar el juego"}
+          Usa las teclas WASD para mover al personaje
         </p>
       </div>
       
@@ -824,7 +826,7 @@ const Game = () => {
               maxLength="100"
             />
             <button type="submit">Enviar</button>
-            <div className="chat-help">Presiona Y para cancelar</div>
+            <div className="chat-help">Presiona Enter para cancelar</div>
           </form>
         </div>
       )}
@@ -842,7 +844,7 @@ const Game = () => {
           borderRadius: '5px',
           fontSize: '12px'
         }}>
-          Presiona Y para chatear
+          Presiona Enter para chatear
         </div>
       )}
     </div>
