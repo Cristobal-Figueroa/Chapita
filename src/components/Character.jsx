@@ -43,8 +43,7 @@ const Character = ({ position, visible = true, direction = 'left' }) => {
         transform: `${direction === 'right' ? 'scaleX(-1)' : 'scaleX(1)'} ${bounce}`,
         zIndex: 10,
         transition: 'all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275)', // Transición más suave con efecto de rebote
-        boxShadow: '0 0 10px 2px rgba(255, 255, 0, 0.5)', // Brillo alrededor del personaje
-        filter: isMoving ? 'brightness(1.2)' : 'brightness(1)', // Efecto de brillo al moverse
+        filter: isMoving ? 'brightness(1.2)' : 'brightness(1)' // Efecto de brillo al moverse
       }}
     />
   );
