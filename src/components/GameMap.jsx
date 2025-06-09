@@ -2,6 +2,9 @@ import React from 'react';
 import { map1, TILE_SIZE } from '../assets/maps/map1';
 import grassTexture from '../assets/sprites/gras.jpg';
 import treeTexture from '../assets/sprites/tree.png';
+import flower1Texture from '../assets/sprites/flower1.png';
+import flower2Texture from '../assets/sprites/flower2.png';
+import flower3Texture from '../assets/sprites/flower3.png';
 
 const GameMap = () => {
   // Función para determinar el color base de cada tipo de celda
@@ -25,6 +28,12 @@ const GameMap = () => {
         return '#0b3b0b';
       case 8: // Arbustos
         return '#3a7a3a';
+      case 9: // Flores tipo 1
+        return '#4a8f29';
+      case 10: // Flores tipo 2
+        return '#4a8f29';
+      case 11: // Flores tipo 3
+        return '#4a8f29';
       default:
         return '#4a8f29';
     }
@@ -107,7 +116,7 @@ const GameMap = () => {
           boxShadow: 'inset 0 0 5px rgba(0,0,0,0.2)',
         };
       
-      case 5: // Flores
+      case 5: // Flores (genéricas)
         return {
           ...baseStyle,
           backgroundColor: 'transparent',
@@ -119,6 +128,39 @@ const GameMap = () => {
             radial-gradient(circle at 50% 50%, #ffffff 3%, transparent 3%)
           `,
           backgroundSize: '20px 20px',
+        };
+        
+      case 9: // Flores tipo 1
+        return {
+          ...baseStyle,
+          backgroundColor: 'transparent',
+          backgroundImage: `url(${flower1Texture})`,
+          backgroundSize: 'contain',
+          backgroundPosition: 'center center',
+          backgroundRepeat: 'no-repeat',
+          zIndex: 3,
+        };
+        
+      case 10: // Flores tipo 2
+        return {
+          ...baseStyle,
+          backgroundColor: 'transparent',
+          backgroundImage: `url(${flower2Texture})`,
+          backgroundSize: 'contain',
+          backgroundPosition: 'center center',
+          backgroundRepeat: 'no-repeat',
+          zIndex: 3,
+        };
+        
+      case 11: // Flores tipo 3
+        return {
+          ...baseStyle,
+          backgroundColor: 'transparent',
+          backgroundImage: `url(${flower3Texture})`,
+          backgroundSize: 'contain',
+          backgroundPosition: 'center center',
+          backgroundRepeat: 'no-repeat',
+          zIndex: 3,
         };
       
       case 6: // Rocas
