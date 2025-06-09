@@ -269,6 +269,7 @@ const GameMap = () => {
         backgroundImage: `url(${grassTexture})`,
         backgroundRepeat: 'repeat',
         backgroundSize: '64px 64px', // Ajusta el tamaño según necesites
+        backgroundColor: '#4a8f29', // Color de hierba como respaldo
       }}
     >
       {/* Renderizar cada celda del mapa */}
