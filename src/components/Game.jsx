@@ -620,19 +620,41 @@ const Game = () => {
   }, [gameStarted]);
   
 
+  // Efecto para manejar el redimensionamiento de la ventana
+  useEffect(() => {
+    const handleResize = () => {
+      // Actualizar la cámara cuando cambia el tamaño de la ventana
+      centerCameraOnCharacter();
+    };
+
+    window.addEventListener('resize', handleResize);
+    return () => {
+      window.removeEventListener('resize', handleResize);
+    };
+  }, []);
+
+  // Efecto para prevenir el comportamiento de scroll y zoom del navegador
+  useEffect(() => {
+    const preventDefaultBehavior = (e) => {
+      if (e.target === gameContainerRef.current || gameContainerRef.current.contains(e.target)) {
+        e.preventDefault();
+      }
+    };
+
+    document.addEventListener('wheel', preventDefaultBehavior, { passive: false });
+    document.addEventListener('touchmove', preventDefaultBehavior, { passive: false });
+
+    return () => {
+      document.removeEventListener('wheel', preventDefaultBehavior);
+      document.removeEventListener('touchmove', preventDefaultBehavior);
+    };
+  }, []);
+
   return (
     <div
       className="game-container"
       ref={gameContainerRef}
       tabIndex="0"
-      style={{
-        position: 'relative',
-        width: '100vw',
-        height: '100vh',
-        overflow: 'hidden',
-        backgroundColor: 'transparent', // Fondo transparente
-        outline: 'none' // Quitar el borde de foco
-      }}
     >
       {!gameStarted ? (
         <div
@@ -761,6 +783,8 @@ const Game = () => {
         ref={viewportRef}
         style={{
           position: 'absolute',
+          top: 0,
+          left: 0,
           width: '100%',
           height: '100%',
           overflow: 'hidden'
@@ -772,8 +796,9 @@ const Game = () => {
             position: 'absolute',
             width: `${map1[0].length * TILE_SIZE}px`,
             height: `${map1.length * TILE_SIZE}px`,
-            transform: `translate(${-cameraPosition.x}px, ${-cameraPosition.y}px) scale(${ZOOM_FACTOR})`,
-            transformOrigin: '0 0'
+            transform: `translate3d(${-cameraPosition.x}px, ${-cameraPosition.y}px, 0) scale(${ZOOM_FACTOR})`,
+            transformOrigin: '0 0',
+            willChange: 'transform'
           }}
         >
           <GameMap map={map1} />
