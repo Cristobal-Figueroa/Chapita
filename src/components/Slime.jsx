@@ -35,8 +35,6 @@ const Slime = ({ initialPosition, movementArea = 3 }) => {
     switch(animationState) {
       case 'jump':
         return slimeJumpSprite;
-      case 'hit':
-        return slimeHitSprite;
       case 'idle':
       default:
         return slimeSprite;
@@ -85,12 +83,12 @@ const Slime = ({ initialPosition, movementArea = 3 }) => {
   
   // Función para cambiar aleatoriamente el estado de animación
   const changeAnimationState = () => {
-    const states = ['idle', 'jump', 'hit'];
+    const states = ['idle', 'jump'];
     const randomState = states[Math.floor(Math.random() * states.length)];
     
     setAnimationState(randomState);
     
-    // Si el estado es hit o jump, volver a idle después de un tiempo
+    // Si el estado es jump, volver a idle después de un tiempo
     if (randomState !== 'idle') {
       setTimeout(() => {
         setAnimationState('idle');
@@ -163,14 +161,15 @@ const Slime = ({ initialPosition, movementArea = 3 }) => {
       <div 
         style={{
           position: 'absolute',
-          top: '-20px',
+          top: '-7px',
           left: '50%',
           transform: 'translateX(-50%)',
           backgroundColor: 'rgba(0, 0, 0, 0.34)',
-          color: '#4eff4e',
-          padding: '2px 5px',
+          color: '#ffffffe6',
+          padding: '1px 5px',
+          paddingTop: '2px',
           borderRadius: '3px',
-          fontSize: '10px',
+          fontSize: '6px',
           whiteSpace: 'nowrap',
           textAlign: 'center',
           zIndex: 100
