@@ -586,24 +586,23 @@ const Game = () => {
   // Referencia para el viewport
   const viewportRef = useRef(null);
   
-  // Función para centrar la cámara en el personaje con manejo de bordes
+  // Función para centrar la cámara en el personaje
   const centerCameraOnCharacter = () => {
-    if (viewportRef.current && gameStarted) {
-      // Calcular la posición del personaje en píxeles
-      const characterX = position.x * TILE_SIZE + TILE_SIZE / 2;
-      const characterY = position.y * TILE_SIZE + TILE_SIZE / 2;
+    if (characterRef.current && viewportRef.current && gameContainerRef.current) {
+      // Posición del personaje en el mundo
+      const characterX = position.x * TILE_SIZE * ZOOM_FACTOR;
+      const characterY = position.y * TILE_SIZE * ZOOM_FACTOR;
       
-      // Obtener las dimensiones del viewport
-      const viewportWidth = viewportRef.current.clientWidth;
-      const viewportHeight = viewportRef.current.clientHeight;
+      // Hacer scroll al contenedor para centrar al personaje
+      gameContainerRef.current.scrollTo({
+        left: characterX - window.innerWidth / 2,
+        top: characterY - window.innerHeight / 2,
+        behavior: 'smooth'
+      });
       
-      // Siempre centrar la cámara en el personaje, sin importar los bordes del mapa
-      // Esto mantiene al personaje en el centro de la pantalla en todo momento
-      const scrollX = characterX - viewportWidth / 2;
-      const scrollY = characterY - viewportHeight / 2;
-      
-      // Actualizar la posición de la cámara
-      setCameraPosition({ x: scrollX, y: scrollY });
+      // No necesitamos actualizar la posición de la cámara ya que usamos scroll
+      // pero mantenemos esta línea para compatibilidad con el resto del código
+      setCameraPosition({ x: 0, y: 0 });
     }
   };
   
