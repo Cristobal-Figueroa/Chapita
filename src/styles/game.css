@@ -243,9 +243,7 @@ body > div, #root > div {
 }
 
 /* Aplicar animación cuando el personaje está en movimiento */
-.character.is-moving {
-  animation: bounce 0.4s ease-in-out infinite;
-}
+
 
 /* Estilos para la cámara */
 .camera {
