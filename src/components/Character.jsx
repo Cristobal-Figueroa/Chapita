@@ -57,7 +57,7 @@ const Character = forwardRef(({
       // Configurar un temporizador para finalizar la animación de ataque después de 500ms
       const timer = setTimeout(() => {
         setIsAttackingState(false);
-      }, 500); // La animación de ataque dura 500ms
+      }, 1); // La animación de ataque dura 500ms
       
       setAttackTimer(timer);
     }
