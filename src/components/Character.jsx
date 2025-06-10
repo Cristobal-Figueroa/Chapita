@@ -8,7 +8,7 @@ import { TILE_SIZE } from '../assets/maps/map1';
 import '../styles/chatBubble.css'; // Importamos los estilos para el globo de chat
 
 // Factor de escala para el tamaño del sprite del personaje
-const SPRITE_SCALE = 1.5; // Aumentar este valor para hacer el sprite más grande
+const SPRITE_SCALE = 2.5; // Aumentado para compensar el TILE_SIZE más pequeño (15px)
 
 // Colores para diferenciar jugadores
 const PLAYER_COLORS = [

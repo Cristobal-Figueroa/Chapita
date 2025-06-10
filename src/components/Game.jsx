@@ -45,7 +45,7 @@ const Game = () => {
   const [chatMessages, setChatMessages] = useState({}); // Mensajes de todos los jugadores
   
   // Factor de zoom para acercar la cámara
-  const ZOOM_FACTOR = 1.5; // Aumentar este valor para acercar más
+  const ZOOM_FACTOR = 3.0; // Aumentado para compensar el TILE_SIZE más pequeño (15px)
   
   // Constante para la velocidad de movimiento (en ms)
   const MOVEMENT_SPEED = 150; // 150ms entre movimientos (más rápido)
