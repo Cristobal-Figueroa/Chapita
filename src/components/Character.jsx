@@ -4,7 +4,8 @@ import dazRightSprite from '../assets/sprites/daz-right.png'; // Sprite para gir
 import dazRunRightSprite from '../assets/sprites/daz-run-right.png'; // Sprite para correr hacia la derecha
 import dazStandSprite from '../assets/sprites/daz-stand.png'; // Sprite para cuando está quieto
 import dazLeftSprite from '../assets/sprites/daz-left.png'; // Sprite para girar a la izquierda
-import dazFightSprite from '../assets/sprites/daz-fight.png'; // Sprite para la animación de ataque
+import dazFightSprite from '../assets/sprites/daz-fight.png'; // Sprite para la animación de ataque (derecha)
+import dazFightLeftSprite from '../assets/sprites/daz-fight-left.png'; // Sprite para la animación de ataque (izquierda)
 import { TILE_SIZE } from '../assets/maps/map1';
 import '../styles/chatBubble.css'; // Importamos los estilos para el globo de chat
 
@@ -231,9 +232,15 @@ const Character = forwardRef(({
   
   // Primero verificamos si está atacando
   if (isAttacking || isAttackingState) {
-    // Usar el sprite de ataque
-    console.log('ESTADO: ATACANDO');
-    currentSprite = dazFightSprite;
+    // Usar el sprite de ataque según la dirección
+    console.log('ESTADO: ATACANDO - Dirección: ' + lastDirection);
+    
+    // Seleccionar el sprite de ataque según la dirección
+    if (lastDirection === 'left') {
+      currentSprite = dazFightLeftSprite; // Ataque mirando a la izquierda
+    } else {
+      currentSprite = dazFightSprite; // Ataque mirando a la derecha u otra dirección
+    }
   }
   // Luego verificamos si está en estado de reposo (0.2 segundos sin teclas)
   else if (isIdle) {
