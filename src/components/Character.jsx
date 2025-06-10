@@ -388,8 +388,8 @@ const Character = forwardRef(({
           src={currentSprite} 
           alt="Character" 
           style={{
-            width: '100%',
-            height: 'auto',
+            width: 'auto',
+            height: '2.5rem',
             imageRendering: 'pixelated',
             display: 'block'
           }}
