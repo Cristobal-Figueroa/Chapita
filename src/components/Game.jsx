@@ -1,13 +1,14 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ref, onValue, off, set, update, serverTimestamp } from 'firebase/database';
-import { database } from '../firebase/config';
 import { useAuth } from '../contexts/AuthContext';
-import GameMap from './GameMap';
 import Character from './Character';
+import GameMap from './GameMap';
+import Slime from './Slime';
 import OnlinePlayers from './OnlinePlayers';
-import '../styles/game.css';
+import { database } from '../firebase/config';
+import { ref, onValue, off, set, update, serverTimestamp } from 'firebase/database';
 import { map1, TILE_SIZE } from '../assets/maps/map1';
+import '../styles/game.css';
 
 const Game = () => {
   // Obtener el usuario actual y funciones de autenticación
@@ -802,6 +803,13 @@ const Game = () => {
           }}
         >
           <GameMap map={map1} />
+
+          {/* NPCs - Slimes */}
+          <Slime initialPosition={{ x: 10, y: 10 }} movementArea={2} />
+          <Slime initialPosition={{ x: 20, y: 15 }} movementArea={3} />
+          <Slime initialPosition={{ x: 30, y: 8 }} movementArea={4} />
+          <Slime initialPosition={{ x: 15, y: 25 }} movementArea={3} />
+          <Slime initialPosition={{ x: 40, y: 20 }} movementArea={2} />
 
           {/* Renderizar otros jugadores */}
           {Object.entries(onlinePlayers).map(([playerId, playerData]) => (
