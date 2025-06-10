@@ -73,13 +73,13 @@ const GameMap = () => {
           backgroundPosition: 'center bottom',
           backgroundRepeat: 'no-repeat',
           // Hacer que el árbol sea mucho más alto que la celda
-          height: `${TILE_SIZE * 2.5}px`,
-          width: `${TILE_SIZE * 2}px`,
+          height: `${TILE_SIZE * 3.5}px`,
+          width: `${TILE_SIZE * 3}px`,
           // Ajustar la posición para que la base del árbol esté en la celda
-          top: `${rowIndex * TILE_SIZE - (TILE_SIZE * 1.5)}px`,
-          left: `${colIndex * TILE_SIZE - (TILE_SIZE * 0.5)}px`,
-          transform: `scale(${1.2 + Math.sin(rowIndex * colIndex) * 0.2})`,
-          filter: 'drop-shadow(3px 6px 8px rgba(0,0,0,0.5))',
+          top: `${rowIndex * TILE_SIZE - (TILE_SIZE * 2.5)}px`,
+          left: `${colIndex * TILE_SIZE - (TILE_SIZE * 1)}px`,
+          transform: `scale(${1.5 + Math.sin(rowIndex * colIndex) * 0.3})`,
+          filter: 'drop-shadow(4px 8px 10px rgba(0,0,0,0.6))',
           zIndex: 20, // Asegurar que los árboles estén por encima de otros elementos
         };
       
@@ -216,13 +216,13 @@ const GameMap = () => {
         // Solo procesar celdas de bosque (tipo 7)
         if (tile === 7) {
           // Crear varios árboles por cada celda de bosque
-          const numTrees = 3 + Math.floor(pseudoRandom(rowIndex, colIndex) * 3); // 3-5 árboles
+          const numTrees = 4 + Math.floor(pseudoRandom(rowIndex, colIndex) * 3); // 4-6 árboles
           
           for (let i = 0; i < numTrees; i++) {
             // Posición aleatoria dentro de la celda
             const offsetX = pseudoRandom(i, rowIndex) * TILE_SIZE * 0.8;
             const offsetY = pseudoRandom(colIndex, i) * TILE_SIZE * 0.8;
-            const scale = 1.0 + pseudoRandom(i + rowIndex, i + colIndex) * 0.6; // 1.0-1.6 (mucho más grande)
+            const scale = 1.2 + pseudoRandom(i + rowIndex, i + colIndex) * 0.8; // 1.2-2.0 (mucho más grande)
             const zIndexOffset = Math.floor(pseudoRandom(i, colIndex) * 5); // 0-4
             
             forestTrees.push(
@@ -230,16 +230,16 @@ const GameMap = () => {
                 key={`forest-tree-${rowIndex}-${colIndex}-${i}`}
                 style={{
                   position: 'absolute',
-                  left: `${colIndex * TILE_SIZE + offsetX - (TILE_SIZE * 0.5)}px`,
-                  top: `${rowIndex * TILE_SIZE + offsetY - (TILE_SIZE * 1.2)}px`,
-                  width: `${TILE_SIZE * 2}px`,
-                  height: `${TILE_SIZE * 2.5}px`,
+                  left: `${colIndex * TILE_SIZE + offsetX - (TILE_SIZE * 1)}px`,
+                  top: `${rowIndex * TILE_SIZE + offsetY - (TILE_SIZE * 2)}px`,
+                  width: `${TILE_SIZE * 3}px`,
+                  height: `${TILE_SIZE * 3.5}px`,
                   backgroundImage: `url(${treeTexture})`,
                   backgroundSize: 'contain',
                   backgroundPosition: 'center bottom',
                   backgroundRepeat: 'no-repeat',
-                  transform: `scale(${scale})`,
-                  filter: 'drop-shadow(3px 6px 8px rgba(0,0,0,0.5))',
+                  transform: `scale(${scale * 1.3})`,
+                  filter: 'drop-shadow(4px 8px 10px rgba(0,0,0,0.6))',
                   zIndex: 20 + zIndexOffset, // Asegurar que los árboles estén por encima de otros elementos
                 }}
               />
