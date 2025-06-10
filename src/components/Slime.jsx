@@ -144,6 +144,8 @@ const Slime = ({ initialPosition, movementArea = 3 }) => {
     backgroundColor: 'transparent',
     zIndex: position.y,
     transition: 'top 0.3s ease, left 0.3s ease',
+    imageRendering: 'pixelated',
+    WebkitFontSmoothing: 'none',
   };
   
   // Estilo para la imagen del slime
@@ -152,6 +154,9 @@ const Slime = ({ initialPosition, movementArea = 3 }) => {
     height: '100%',
     objectFit: 'contain',
     imageRendering: 'pixelated',
+    WebkitImageRendering: 'pixelated',
+    MozImageRendering: 'crisp-edges',
+    msInterpolationMode: 'nearest-neighbor',
     transform: direction === 'right' ? 'scaleX(-1)' : 'scaleX(1)',
   };
   
