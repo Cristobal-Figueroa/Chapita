@@ -4,6 +4,7 @@ import dazRightSprite from '../assets/sprites/daz-right.png'; // Sprite para gir
 import dazRunRightSprite from '../assets/sprites/daz-run-right.png'; // Sprite para correr hacia la derecha
 import dazStandSprite from '../assets/sprites/daz-stand.png'; // Sprite para cuando está quieto
 import dazLeftSprite from '../assets/sprites/daz-left.png'; // Sprite para girar a la izquierda
+import dazFightSprite from '../assets/sprites/daz-fight.png'; // Sprite para la animación de ataque
 import { TILE_SIZE } from '../assets/maps/map1';
 import '../styles/chatBubble.css'; // Importamos los estilos para el globo de chat
 
@@ -29,7 +30,8 @@ const Character = forwardRef(({
   username = 'Jugador',
   isMoving = false,
   chatMessage = null, // Mensaje de chat actual
-  isChatting = false // Indica si el personaje está chateando
+  isChatting = false, // Indica si el personaje está chateando
+  isAttacking = false // Nuevo prop para indicar si el personaje está atacando
 }, ref) => {
   // Estados para la posición visual del personaje (para animaciones suaves)
   const [visualPosition, setVisualPosition] = useState({ x: position.x, y: position.y });
@@ -40,7 +42,27 @@ const Character = forwardRef(({
   const [idleTimer, setIdleTimer] = useState(null); // Temporizador para el estado de reposo
   const [isIdle, setIsIdle] = useState(false); // Estado de reposo (cuando no se presionan teclas por un tiempo)
   const [movementTimer, setMovementTimer] = useState(null); // Temporizador para la animación de movimiento
+  const [attackTimer, setAttackTimer] = useState(null); // Temporizador para la animación de ataque
+  const [isAttackingState, setIsAttackingState] = useState(false); // Estado local de ataque
   
+  // Efecto para manejar el estado de ataque
+  useEffect(() => {
+    // Si se activa el ataque desde props, actualizar el estado local
+    if (isAttacking && !isAttackingState) {
+      setIsAttackingState(true);
+      
+      // Limpiar cualquier temporizador anterior
+      if (attackTimer) clearTimeout(attackTimer);
+      
+      // Configurar un temporizador para finalizar la animación de ataque después de 500ms
+      const timer = setTimeout(() => {
+        setIsAttackingState(false);
+      }, 500); // La animación de ataque dura 500ms
+      
+      setAttackTimer(timer);
+    }
+  }, [isAttacking]);
+
   // Efecto SOLO para manejar cuando el usuario presiona o suelta las teclas
   // Este es el único lugar donde se maneja el estado de reposo
   useEffect(() => {
@@ -203,12 +225,18 @@ const Character = forwardRef(({
   
   // Ya no necesitamos calcular el rebote manualmente, lo hacemos con CSS
   
-  // Seleccionar el sprite adecuado según el estado (movimiento, quieto, reposo) y dirección
+  // Seleccionar el sprite adecuado según el estado (movimiento, quieto, reposo, ataque) y dirección
   // Establecer un sprite por defecto para evitar que sea undefined
   let currentSprite = dazStandSprite;
   
-  // Primero verificamos si está en estado de reposo (0g.2 segundos sin teclas)
-  if (isIdle) {
+  // Primero verificamos si está atacando
+  if (isAttacking || isAttackingState) {
+    // Usar el sprite de ataque
+    console.log('ESTADO: ATACANDO');
+    currentSprite = dazFightSprite;
+  }
+  // Luego verificamos si está en estado de reposo (0.2 segundos sin teclas)
+  else if (isIdle) {
     // Estado de reposo: mostrar sprite estático según la última dirección
     console.log('ESTADO: REPOSO (0.2 segundos sin teclas) - Orientación: ' + 
                (lastDirection === 'right' ? 'DERECHA' : 
@@ -314,7 +342,7 @@ const Character = forwardRef(({
   
   return (
     <div 
-      className={`character ${isOtherPlayer ? 'other-player' : ''} ${effectiveIsMoving ? 'is-moving' : ''} ${wasVisible ? 'was-visible' : ''}`}
+      className={`character ${isOtherPlayer ? 'other-player' : ''} ${effectiveIsMoving ? 'is-moving' : ''} ${wasVisible ? 'was-visible' : ''} ${(isAttacking || isAttackingState) ? 'is-attacking' : ''}`}
       style={{
         position: 'absolute',
         left: `${visualPosition.x * TILE_SIZE}px`,

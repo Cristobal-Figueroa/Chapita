@@ -243,7 +243,14 @@ body > div, #root > div {
 }
 
 /* Aplicar animación cuando el personaje está en movimiento */
+.character.is-moving {
+  animation: bounce 0.8s ease-in-out infinite;
+}
 
+/* No se usa animación para el ataque, solo se cambia el sprite */
+.character.is-attacking .character-sprite {
+  /* Sin animación adicional, solo se muestra el sprite de ataque */
+}
 
 /* Estilos para la cámara */
 .camera {

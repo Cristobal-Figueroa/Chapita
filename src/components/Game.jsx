@@ -21,20 +21,13 @@ const Game = () => {
   // Estado para los jugadores online
   const [onlinePlayers, setOnlinePlayers] = useState({});
   
-  // Posición inicial del personaje (coordenadas en el mapa)
-  const [position, setPosition] = useState({ x: 12, y: 12 });
-  
-  // Estado para la dirección del personaje (izquierda o derecha)
-  const [direction, setDirection] = useState('left');
-  
-  // Estado para almacenar la última dirección presionada
-  const [lastDirection, setLastDirection] = useState(null);
-  
-  // Estado para controlar el cooldown entre movimientos
-  const [canMove, setCanMove] = useState(true);
-  
-  // Estado para detectar si hay alguna tecla de movimiento presionada actualmente
-  const [isKeyPressed, setIsKeyPressed] = useState(false);
+  // Posición inicial del personaje 
+  const [position, setPosition] = useState({ x: 10, y: 10 });
+  const [direction, setDirection] = useState('down');
+  const [canMove, setCanMove] = useState(true); // Estado para controlar el cooldown de movimiento
+  const [lastDirection, setLastDirection] = useState(null); // Última dirección presionada
+  const [isKeyPressed, setIsKeyPressed] = useState(false); // Estado para saber si hay una tecla presionada
+  const [isAttacking, setIsAttacking] = useState(false); // Estado para la animación de ataque
   
   // Estado para la posición de la cámara
   const [cameraPosition, setCameraPosition] = useState({ x: 0, y: 0 });
@@ -214,7 +207,7 @@ const Game = () => {
                 updatedPlayers[playerId] = {
                   ...newPlayerData,
                   isMoving: isMovingNow,
-                  lastDirection: detectedDirection
+                  lastDirection: newPlayerData.lastDirection || prevPlayerData.lastDirection
                 };
               }
             } else {
@@ -430,6 +423,16 @@ const Game = () => {
         currentKey = 'right';
         setIsKeyPressed(true);
         break;
+      case 'r':
+        // Activar la animación de ataque si no está ya atacando
+        if (!isAttacking) {
+          setIsAttacking(true);
+          // Desactivar el ataque después de 500ms (duración de la animación)
+          setTimeout(() => {
+            setIsAttacking(false);
+          }, 500);
+        }
+        return; // No continuar con el movimiento
       default:
         return; // Ignorar otras teclas
     }
@@ -827,13 +830,14 @@ const Game = () => {
 
           {/* Personaje del jugador actual */}
           <Character
+            ref={characterRef}
             position={position}
             direction={direction}
             isKeyPressed={isKeyPressed}
-            ref={characterRef}
             username={currentUser?.displayName || currentUser?.email || 'Jugador'}
             chatMessage={chatMessage}
             isChatting={isChatting}
+            isAttacking={isAttacking}
           />
         </div>
         <p>
