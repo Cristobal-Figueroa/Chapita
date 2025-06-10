@@ -8,6 +8,11 @@
   background-color: #000;
 }
 
+/* Fondo del juego */
+.viewport {
+  background-color: transparent !important; /* Fondo transparente */
+}
+
 .start-screen {
   position: absolute;
   top: 0;

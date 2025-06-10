@@ -633,10 +633,10 @@ const Game = () => {
       tabIndex="0"
       style={{
         position: 'relative',
-        width: '100vw',
-        height: '100vh',
-        overflow: 'hidden',
-        backgroundColor: '#87CEEB', // Cielo azul claro
+        width: `${map1[0].length * TILE_SIZE * ZOOM_FACTOR}px`,
+        height: `${map1.length * TILE_SIZE * ZOOM_FACTOR}px`,
+        overflow: 'auto',
+        backgroundColor: 'transparent', // Fondo transparente
         outline: 'none' // Quitar el borde de foco
       }}
     >
@@ -767,18 +767,19 @@ const Game = () => {
         ref={viewportRef}
         style={{
           position: 'absolute',
-          width: '100%',
-          height: '100%',
-          overflow: 'hidden'
+          width: `${map1[0].length * TILE_SIZE * ZOOM_FACTOR}px`,
+          height: `${map1.length * TILE_SIZE * ZOOM_FACTOR}px`,
+          overflow: 'visible'
         }}
       >
         <div
           className="game-world"
           style={{
             position: 'absolute',
-            transform: `translate(${-cameraPosition.x}px, ${-cameraPosition.y}px) scale(${ZOOM_FACTOR})`,
-            transition: 'transform 0.2s ease-out',
-            transformOrigin: 'center center'
+            width: `${map1[0].length * TILE_SIZE}px`,
+            height: `${map1.length * TILE_SIZE}px`,
+            transform: `scale(${ZOOM_FACTOR})`,
+            transformOrigin: '0 0'
           }}
         >
           <GameMap map={map1} />
