@@ -212,6 +212,41 @@ body > div, #root > div {
   margin-bottom: 3px;
 }
 
+/* Estilos para el personaje */
+.character {
+  position: absolute;
+  width: 96px; /* Tamaño fijo para el personaje */
+  height: 96px;
+  z-index: 10;
+  image-rendering: pixelated;
+  transform-origin: center bottom;
+  opacity: 1; /* Cambiado a 1 para que sea visible por defecto */
+  /* Transiciones suaves para movimiento y animaciones */
+  transition: opacity 0.5s ease-in-out, left 0.15s ease-out, top 0.15s ease-out, transform 0.2s ease-out;
+}
+
+/* Estilos para el sprite del personaje */
+.character-sprite {
+  position: relative;
+  display: block;
+  width: 100%;
+  height: 100%;
+  image-rendering: pixelated;
+  opacity: 1;
+}
+
+/* Animación de rebote para el personaje en movimiento */
+@keyframes bounce {
+  0% { transform: translateY(0); }
+  50% { transform: translateY(-5px); }
+  100% { transform: translateY(0); }
+}
+
+/* Aplicar animación cuando el personaje está en movimiento */
+.character.is-moving {
+  animation: bounce 0.4s ease-in-out infinite;
+}
+
 /* Estilos para la cámara */
 .camera {
   position: absolute;

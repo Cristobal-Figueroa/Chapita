@@ -39,6 +39,7 @@ const Character = forwardRef(({
   const [moveCount, setMoveCount] = useState(0); // Contador de movimientos en la misma dirección
   const [idleTimer, setIdleTimer] = useState(null); // Temporizador para el estado de reposo
   const [isIdle, setIsIdle] = useState(false); // Estado de reposo (cuando no se presionan teclas por un tiempo)
+  const [movementTimer, setMovementTimer] = useState(null); // Temporizador para la animación de movimiento
   
   // Efecto SOLO para manejar cuando el usuario presiona o suelta las teclas
   // Este es el único lugar donde se maneja el estado de reposo
@@ -93,43 +94,36 @@ const Character = forwardRef(({
   // Este efecto NO afecta al estado de reposo
   useEffect(() => {
     // Detectar si la posición ha cambiado realmente
-    const positionChanged = visualPosition.x !== position.x || visualPosition.y !== position.y;
+    const positionChanged = position.x !== visualPosition.x || position.y !== visualPosition.y;
     
     if (positionChanged) {
       // Marcar que el personaje está en movimiento SOLO cuando cambia de cuadradito
       setIsMovingState(true);
       
-      // Para jugadores online, usar transición más suave
-      if (isOtherPlayer) {
-        // Usar un timeout para crear una transición suave
-        const transitionTimer = setTimeout(() => {
-          setVisualPosition({ x: position.x, y: position.y });
-        }, 10); // Pequeño retraso para permitir que la transición CSS funcione
-        
-        // Después de completar el movimiento, marcar que ya no está moviéndose
-        const animationDuration = 300; // Duración más larga para otros jugadores
-        const timer = setTimeout(() => {
-          setIsMovingState(false);
-        }, animationDuration);
-        
-        return () => {
-          clearTimeout(transitionTimer);
-          clearTimeout(timer);
-        };
-      } else {
-        // Para el jugador local, actualizar inmediatamente
-        setVisualPosition({ x: position.x, y: position.y });
-        
-        // Después de completar el movimiento, marcar que ya no está moviéndose
-        const animationDuration = 150; // Duración de la animación en ms
-        const timer = setTimeout(() => {
-          setIsMovingState(false);
-        }, animationDuration);
-        
-        return () => clearTimeout(timer);
+      // Actualizar la posición visual con transición CSS suave
+      setVisualPosition({ x: position.x, y: position.y });
+      
+      // Cancelar cualquier temporizador anterior
+      if (movementTimer) {
+        clearTimeout(movementTimer);
       }
+      
+      // Crear un nuevo temporizador para desactivar el estado de movimiento
+      // después de que se complete la transición CSS
+      const timer = setTimeout(() => {
+        // Solo desactivar el estado de movimiento si no hay tecla presionada
+        if (!isKeyPressed && !isOtherPlayer) {
+          setIsMovingState(false);
+        }
+      }, 200); // 200ms para que coincida con la duración de la transición CSS
+      
+      setMovementTimer(timer);
+      
+      return () => {
+        if (timer) clearTimeout(timer);
+      };
     }
-  }, [position, visualPosition, isOtherPlayer]);
+  }, [position, visualPosition, isKeyPressed, isOtherPlayer, movementTimer]);
   
   // Para jugadores locales, usar el estado de movimiento interno
   // Para otros jugadores, detectar cambios de posición para mostrar sprite de movimiento
@@ -207,11 +201,11 @@ const Character = forwardRef(({
   
   if (!visible) return null;
   
-  // Calcular un ligero rebote para la animación de movimiento
-  const bounce = effectiveIsMoving ? 'translateY(-5px)' : 'translateY(0)'; 
+  // Ya no necesitamos calcular el rebote manualmente, lo hacemos con CSS
   
   // Seleccionar el sprite adecuado según el estado (movimiento, quieto, reposo) y dirección
-  let currentSprite;
+  // Establecer un sprite por defecto para evitar que sea undefined
+  let currentSprite = dazStandSprite;
   
   // Primero verificamos si está en estado de reposo (0g.2 segundos sin teclas)
   if (isIdle) {
@@ -329,7 +323,8 @@ const Character = forwardRef(({
         display: visible ? 'flex' : 'none',
         flexDirection: 'column',
         alignItems: 'center',
-        zIndex: 10
+        zIndex: 10,
+        opacity: 1 // Asegurar que el personaje sea visible
       }}>
       {/* Globo de chat */}
       {chatMessage && (
@@ -377,21 +372,29 @@ const Character = forwardRef(({
         style={{
           width: `${TILE_SIZE * SPRITE_SCALE}px`,
           height: `${TILE_SIZE * SPRITE_SCALE}px`,
-          backgroundImage: `url(${currentSprite})`,
-          backgroundSize: 'contain',
-          backgroundRepeat: 'no-repeat',
-          backgroundPosition: 'center',
-          transition: isOtherPlayer 
-            ? 'transform 0.1s ease-out, left 0.3s ease-out, top 0.3s ease-out' 
-            : effectiveIsMoving ? 'none' : 'transform 0.2s ease-out',
           transform: `translate(${-TILE_SIZE * (SPRITE_SCALE - 1) / 2}px, ${-TILE_SIZE * (SPRITE_SCALE - 1) / 2}px)`,
           filter: isOtherPlayer 
             ? `drop-shadow(0 0 5px ${playerColor}) drop-shadow(2px 2px 2px rgba(0, 0, 0, 0.5))` 
             : 'drop-shadow(2px 2px 2px rgba(0, 0, 0, 0.5))', // Sombra suave
           backfaceVisibility: 'hidden', // Reducir parpadeos
-          willChange: 'transform' // Optimizar rendimiento
+          willChange: 'transform', // Optimizar rendimiento
+          position: 'relative',
+          display: 'flex',
+          justifyContent: 'center',
+          alignItems: 'flex-end'
         }}
-      />
+      >
+        <img 
+          src={currentSprite} 
+          alt="Character" 
+          style={{
+            width: '100%',
+            height: 'auto',
+            imageRendering: 'pixelated',
+            display: 'block'
+          }}
+        />
+      </div>
     </div>
   );
 });
