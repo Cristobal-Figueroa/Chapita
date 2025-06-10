@@ -588,21 +588,16 @@ const Game = () => {
   
   // Función para centrar la cámara en el personaje
   const centerCameraOnCharacter = () => {
-    if (characterRef.current && viewportRef.current && gameContainerRef.current) {
+    if (characterRef.current && viewportRef.current) {
       // Posición del personaje en el mundo
-      const characterX = position.x * TILE_SIZE * ZOOM_FACTOR;
-      const characterY = position.y * TILE_SIZE * ZOOM_FACTOR;
+      const characterX = position.x * TILE_SIZE;
+      const characterY = position.y * TILE_SIZE;
       
-      // Hacer scroll al contenedor para centrar al personaje
-      gameContainerRef.current.scrollTo({
-        left: characterX - window.innerWidth / 2,
-        top: characterY - window.innerHeight / 2,
-        behavior: 'smooth'
+      // Actualizar la posición de la cámara para mantener al personaje centrado
+      setCameraPosition({
+        x: characterX - (window.innerWidth / ZOOM_FACTOR / 2) + (TILE_SIZE / 2),
+        y: characterY - (window.innerHeight / ZOOM_FACTOR / 2) + (TILE_SIZE / 2)
       });
-      
-      // No necesitamos actualizar la posición de la cámara ya que usamos scroll
-      // pero mantenemos esta línea para compatibilidad con el resto del código
-      setCameraPosition({ x: 0, y: 0 });
     }
   };
   
@@ -632,9 +627,9 @@ const Game = () => {
       tabIndex="0"
       style={{
         position: 'relative',
-        width: `${map1[0].length * TILE_SIZE * ZOOM_FACTOR}px`,
-        height: `${map1.length * TILE_SIZE * ZOOM_FACTOR}px`,
-        overflow: 'auto',
+        width: '100vw',
+        height: '100vh',
+        overflow: 'hidden',
         backgroundColor: 'transparent', // Fondo transparente
         outline: 'none' // Quitar el borde de foco
       }}
@@ -667,7 +662,7 @@ const Game = () => {
       <div
         className="game-ui"
         style={{
-          position: 'absolute',
+          position: 'fixed',
           top: '10px',
           right: '10px',
           padding: '10px',
@@ -718,7 +713,7 @@ const Game = () => {
       <div
         className="online-players-panel"
         style={{
-          position: 'absolute',
+          position: 'fixed',
           top: '10px',
           left: '10px',
           width: '200px',
@@ -766,9 +761,9 @@ const Game = () => {
         ref={viewportRef}
         style={{
           position: 'absolute',
-          width: `${map1[0].length * TILE_SIZE * ZOOM_FACTOR}px`,
-          height: `${map1.length * TILE_SIZE * ZOOM_FACTOR}px`,
-          overflow: 'visible'
+          width: '100%',
+          height: '100%',
+          overflow: 'hidden'
         }}
       >
         <div
@@ -777,7 +772,7 @@ const Game = () => {
             position: 'absolute',
             width: `${map1[0].length * TILE_SIZE}px`,
             height: `${map1.length * TILE_SIZE}px`,
-            transform: `scale(${ZOOM_FACTOR})`,
+            transform: `translate(${-cameraPosition.x}px, ${-cameraPosition.y}px) scale(${ZOOM_FACTOR})`,
             transformOrigin: '0 0'
           }}
         >

@@ -213,7 +213,7 @@ const Character = forwardRef(({
   // Seleccionar el sprite adecuado según el estado (movimiento, quieto, reposo) y dirección
   let currentSprite;
   
-  // Primero verificamos si está en estado de reposo (0.2 segundos sin teclas)
+  // Primero verificamos si está en estado de reposo (0g.2 segundos sin teclas)
   if (isIdle) {
     // Estado de reposo: mostrar sprite estático según la última dirección
     console.log('ESTADO: REPOSO (0.2 segundos sin teclas) - Orientación: ' + 
